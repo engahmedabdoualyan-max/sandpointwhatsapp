@@ -11,6 +11,25 @@ const __dirname = dirname(__filename);
 
 const USERS_FILE = join(__dirname, 'users.json');
 
+// Sanitize Eastern Arabic numerals (١٢٣٤٥٦٧٨٩٠) to Western (1234567890)
+function sanitizeArabicNumerals(text) {
+  const arabicMap = {
+    '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4',
+    '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9',
+    '۰': '0', '۱': '1', '۲': '2', '۳': '3', '۴': '4',
+    '۵': '5', '۶': '6', '۷': '7', '۸': '8', '۹': '9'
+  };
+  return text.replace(/[٠-٩۰-۹]/g, char => arabicMap[char] || char);
+}
+
+// Global back command check: "0", "back", "تعديل", "رجوع"
+function isBackCommand(text, lang) {
+  const sanitized = sanitizeArabicNumerals(text.toLowerCase().trim());
+  const backKeywords = ['0', 'back', 'تعديل', 'رجوع', 'الغاء', 'cancel'];
+  if (lang === 'ar') backKeywords.push('عودة');
+  return backKeywords.some(k => sanitized === k || sanitized.includes(k));
+}
+
 let usersData = {};
 
 function loadUsers() {
@@ -937,12 +956,38 @@ async function handleMessage(sock, m) {
   
   const userId = m.key.remoteJid;
   const isGroup = userId.endsWith('@g.us');
-  
+
   if (isGroup) return;
   
-  const userState = getUserState(userId);
   const messageText = m.message.conversation || m.message.extendedTextMessage?.text || '';
-  const text = messageText.trim();
+  // Sanitize Arabic numerals early so all logic uses Western digits
+  const text = sanitizeArabicNumerals(messageText.trim());
+  
+  // ===== STRICT GLOBAL RESET OVERRIDE =====
+  // If user types exactly "0", "back", or "تعديل" - completely wipe their data and restart
+  const exactResetCommands = ['0', 'back', 'تعديل'];
+  if (exactResetCommands.includes(text)) {
+    // Completely delete user from users.json
+    if (usersData[userId]) {
+      delete usersData[userId];
+      saveUsers();
+    }
+    // Force-send main 7-language greeting message
+    await sendHumanLikeMessage(sock, userId, LANGUAGE_SELECTION);
+    await sendLanguageList(sock, userId);
+    return;
+  }
+  // ===== END STRICT OVERRIDE =====
+  
+  const userState = getUserState(userId);
+  
+  // Global back command: reset to language selection from any step (covers "رجوع", "الغاء", etc.)
+  if (isBackCommand(text, userState.language || 'en')) {
+    await sendHumanLikeMessage(sock, userId, LANG_MESSAGES[userState.language || 'en'].prompts.thank_you);
+    resetUserState(userId);
+    await sendLanguageList(sock, userId);
+    return;
+  }
   
   let hasAttachment = false;
   let attachmentInfo = {};
@@ -973,12 +1018,7 @@ async function handleMessage(sock, m) {
     saveAttachment(userId, attachmentInfo);
   }
   
-  if (text === '0') {
-    const thankYouMsg = LANG_MESSAGES[userState.language || 'en'].prompts.thank_you;
-    await sendMsg(thankYouMsg);
-    resetUserState(userId);
-    return;
-  }
+  // Remove old "0" handling since it's now in isBackCommand
   
   if (text === '/start' || text === 'restart' || text.toLowerCase() === 'cancel') {
     resetUserState(userId);
@@ -1238,7 +1278,10 @@ async function connectToWhatsApp() {
 
     sock.ev.on('creds.update', saveCreds);
 
-    sock.ev.on('messages.upsert', async ({ messages }) => {
+    sock.ev.on('messages.upsert', async ({ messages, type }) => {
+      // Only process notify messages (user messages), ignore status updates and duplicates
+      if (type !== 'notify') return;
+      
       for (const m of messages) {
         if (!m.key.fromMe && m.message) {
           await handleMessage(sock, m);
