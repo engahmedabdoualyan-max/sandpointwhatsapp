@@ -919,7 +919,7 @@ async function connectToWhatsApp() {
     
     if (qr) {
       console.log('\n📱 امسح رمز QR أدناه لتسجيل الدخول:\n');
-      qrcode.generate(qr, { small: true });
+      qrcode.generate(qr, { small: true, padding: 1 });
     }
     
     if (connection === 'open') {
@@ -954,4 +954,15 @@ async function connectToWhatsApp() {
 
 loadUsers();
 console.log('🚀 بدء تشغيل بوت ساند بوينت العالمية (7 لغات + مضادات حظر إنسانيات)...');
+
+const PORT = process.env.PORT || 3000;
+const http = require('http');
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('WhatsApp Bot Server Running - Sand Point Global');
+});
+server.listen(PORT, () => {
+  console.log(`🌐 Server listening on port ${PORT}`);
+});
+
 connectToWhatsApp().catch(console.error);
