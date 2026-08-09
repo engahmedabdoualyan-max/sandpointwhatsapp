@@ -1,5 +1,5 @@
 import { default as makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } from '@whiskeysockets/baileys';
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, rmSync } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -1151,78 +1151,96 @@ async function handleMessage(sock, m) {
 let currentQrData = null;
 
 async function connectToWhatsApp() {
-  const { state, saveCreds } = await useMultiFileAuthState(join(__dirname, 'auth_info'));
-  
-  const { version, isLatest } = await fetchLatestBaileysVersion();
-  console.log("Baileys version: " + version.join(".") + " - Latest: " + isLatest);
-  
-  const sock = makeWASocket({
-    version,
-    auth: state,
-    printQRInTerminal: false,
-    browser: ['SAND POINT Bot', 'Safari', '1.0.0']
-  });
-  
-  const PHONE_NUMBER = process.env.WA_PHONE_NUMBER;
-  if (PHONE_NUMBER) {
-    console.log('\n📱 Attempting pairing code authentication for:', PHONE_NUMBER);
-    try {
-      const code = await sock.requestPairingCode(PHONE_NUMBER.replace(/\D/g, ''));
-      console.log('\n🔐 ============================================');
-      console.log('🔑 PAIRING CODE:', code);
-      console.log('   (8-digit code for WhatsApp pairing)');
-      console.log('🔐 ============================================\n');
-    } catch (err) {
-      console.log('\n❌ Pairing code failed:', err.message);
-      console.log('   Falling back to QR code mode...\n');
-    }
-  }
-  
-  sock.ev.on('connection.update', async (update) => {
-    const { connection, lastDisconnect, qr } = update;
-    
-    if (qr) {
+  try {
+    const { state, saveCreds } = await useMultiFileAuthState(join(__dirname, 'auth_info'));
+
+    const { version, isLatest } = await fetchLatestBaileysVersion();
+    console.log("Baileys version: " + version.join(".") + " - Latest: " + isLatest);
+
+    const sock = makeWASocket({
+      version,
+      auth: state,
+      printQRInTerminal: false,
+      browser: ['SAND POINT Bot', 'Safari', '1.0.0']
+    });
+
+    const PHONE_NUMBER = process.env.WA_PHONE_NUMBER;
+    if (PHONE_NUMBER) {
+      console.log('\n📱 Attempting pairing code authentication for:', PHONE_NUMBER);
       try {
-        const qrImageDataUrl = await QRCode.toDataURL(qr, { 
-          width: 256, 
-          margin: 2,
-          color: { dark: '#000', light: '#fff' }
-        });
-        currentQrData = qrImageDataUrl;
-        console.log('\n📱 افتح هنا لمسح رمز QR: ' + (process.env.RENDER_EXTERNAL_URL || 'http://localhost:' + PORT) + '/qr\n');
-      } catch (e) {
-        console.log('\n❌ خطأ في إنشاء رمز QR:', e.message);
+        const code = await sock.requestPairingCode(PHONE_NUMBER.replace(/\D/g, ''));
+        console.log('\n🔐 ============================================');
+        console.log('🔑 PAIRING CODE:', code);
+        console.log('   (8-digit code for WhatsApp pairing)');
+        console.log('🔐 ============================================\n');
+      } catch (err) {
+        console.log('\n❌ Pairing code failed:', err.message);
+        console.log('   Falling back to QR code mode...\n');
       }
     }
-    
-    if (connection === 'open') {
-      console.log('\n✅ متصل بنجاح بـ WhatsApp!');
-      console.log('🤖 البوت جاهز لاستقبال الرسائل (7 لغات + مضادات حظر)...\n');
-    }
-    
-    if (connection === 'close') {
-      const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
-      console.log('\n❌ انقطع الاتصال:', lastDisconnect?.error?.message);
-      if (shouldReconnect) {
-        console.log('🔄 محاولة إعادة الاتصال...\n');
-        setTimeout(connectToWhatsApp, 5000);
-      } else {
-        console.log('🔐 تم تسجيل الخروج. يرجى حذف مجلد auth_info ومسح QR مرة أخرى.');
+
+    sock.ev.on('connection.update', async (update) => {
+      const { connection, lastDisconnect, qr } = update;
+
+      if (qr) {
+        try {
+          const qrImageDataUrl = await QRCode.toDataURL(qr, {
+            width: 256,
+            margin: 2,
+            color: { dark: '#000', light: '#fff' }
+          });
+          currentQrData = qrImageDataUrl;
+          console.log('\n📱 افتح هنا لمسح رمز QR: ' + (process.env.RENDER_EXTERNAL_URL || 'http://localhost:' + PORT) + '/qr\n');
+        } catch (e) {
+          console.log('\n❌ خطأ في إنشاء رمز QR:', e.message);
+        }
       }
-    }
-  });
-  
-  sock.ev.on('creds.update', saveCreds);
-  
-  sock.ev.on('messages.upsert', async ({ messages }) => {
-    for (const m of messages) {
-      if (!m.key.fromMe && m.message) {
-        await handleMessage(sock, m);
+
+      if (connection === 'open') {
+        console.log('\n✅ متصل بنجاح بـ WhatsApp!');
+        console.log('🤖 البوت جاهز لاستقبال الرسائل (7 لغات + مضادات حظر)...\n');
       }
-    }
-  });
-  
-  return sock;
+
+      if (connection === 'close') {
+        const statusCode = lastDisconnect?.error?.output?.statusCode;
+        const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+        console.log('\n❌ انقطع الاتصال:', lastDisconnect?.error?.message);
+
+        if (!shouldReconnect || (statusCode === DisconnectReason.badSession || statusCode === DisconnectReason.connectionFailure)) {
+          console.log('🗑️  حذف ملفات الجلسة التالفة (corrupted session)...');
+          try {
+            rmSync(join(__dirname, 'auth_info'), { recursive: true, force: true });
+            console.log('✅ تم حذف مجلد auth_info بنجاح');
+          } catch (cleanupErr) {
+            console.log('⚠️ فشل حذف auth_info:', cleanupErr.message);
+          }
+        }
+
+        if (shouldReconnect) {
+          console.log('🔄 محاولة إعادة الاتصال...\n');
+          setTimeout(connectToWhatsApp, 5000);
+        } else {
+          console.log('🔐 تم تسجيل الخروج. تم حذف auth_info. يرج مسح QR مرة أخرى.');
+        }
+      }
+    });
+
+    sock.ev.on('creds.update', saveCreds);
+
+    sock.ev.on('messages.upsert', async ({ messages }) => {
+      for (const m of messages) {
+        if (!m.key.fromMe && m.message) {
+          await handleMessage(sock, m);
+        }
+      }
+    });
+
+    return sock;
+  } catch (err) {
+    console.error('\n💥 فشل إنشاء اتصال واتساب:', err.message);
+    console.log('🔄 محاولة إعادة التشغيل بعد 5 ثواني...\n');
+    setTimeout(connectToWhatsApp, 5000);
+  }
 }
 
 let server;
