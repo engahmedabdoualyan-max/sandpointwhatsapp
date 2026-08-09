@@ -1,10 +1,10 @@
 import { default as makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } from '@whiskeysockets/baileys';
-import qrcode from 'qrcode-terminal';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import http from 'http';
+import QRCode from 'qrcode';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -902,6 +902,8 @@ async function handleMessage(sock, m) {
   resetUserState(userId);
 }
 
+let currentQrData = null;
+
 async function connectToWhatsApp() {
   const { state, saveCreds } = await useMultiFileAuthState(join(__dirname, 'auth_info'));
   
@@ -915,12 +917,21 @@ async function connectToWhatsApp() {
     browser: ['SAND POINT Bot', 'Chrome', '1.0.0']
   });
   
-  sock.ev.on('connection.update', (update) => {
+  sock.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect, qr } = update;
     
     if (qr) {
-      console.log('\n📱 امسح رمز QR أدناه لتسجيل الدخول:\n');
-      qrcode.generate(qr, { small: true, padding: 1 });
+      try {
+        const qrImageDataUrl = await QRCode.toDataURL(qr, { 
+          width: 256, 
+          margin: 2,
+          color: { dark: '#000', light: '#fff' }
+        });
+        currentQrData = qrImageDataUrl;
+        console.log('\n📱 افتح هنا لمسح رمز QR: ' + (process.env.RENDER_EXTERNAL_URL || 'http://localhost:' + PORT) + '/qr\n');
+      } catch (e) {
+        console.log('\n❌ خطأ في إنشاء رمز QR:', e.message);
+      }
     }
     
     if (connection === 'open') {
@@ -953,16 +964,62 @@ async function connectToWhatsApp() {
   return sock;
 }
 
+let server;
+
+function startServer() {
+  const PORT = process.env.PORT || 3000;
+  server = http.createServer((req, res) => {
+    if (req.url === '/qr' && currentQrData) {
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(`<!DOCTYPE html>
+<html>
+<head><title>SAND POINT GLOBAL - WhatsApp QR Code</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background: #f5f5f5; }
+  .container { max-width: 500px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+  h1 { color: #25D36E; font-size: 24px; margin-bottom: 20px; }
+  .qr-code { margin: 20px auto; display: flex; justify-content: center; }
+  .instructions { margin-top: 20px; color: #555; font-size: 16px; line-height: 1.6; }
+  .scan-icon { font-size: 24px; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>SAND POINT GLOBAL 🏗️</h1>
+    <div class="qr-code">
+      <img src="${currentQrData}" alt="WhatsApp QR Code" style="max-width:100%; height:auto;" />
+    </div>
+    <div class="instructions">
+      <div class="scan-icon">📱</div>
+      <p><strong>Scan this QR code with WhatsApp</strong></p>
+      <p>1. Open WhatsApp on your phone</p>
+      <p>2. Go to Settings → WhatsApp Web/Desktop</p>
+      <p>3. Tap "Scan QR Code" and scan this code</p>
+    </div>
+  </div>
+</body>
+</html>`);
+    } else if (req.url === '/' || req.url === '/health') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ status: 'running', service: 'SAND POINT GLOBAL WhatsApp Bot', qr_available: !!currentQrData }));
+    } else {
+      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      res.end('Not Found');
+    }
+  });
+  
+  server.listen(PORT, () => {
+    console.log('🌐 Server listening on port ' + PORT);
+    if (currentQrData) {
+      console.log('📱 QR code available at: http://localhost:' + PORT + '/qr');
+    } else {
+      console.log('⏳ Waiting for QR code...');
+    }
+  });
+}
+
 loadUsers();
 console.log('🚀 بدء تشغيل بوت ساند بوينت العالمية (7 لغات + مضادات حظر إنسانيات)...');
-
-const PORT = process.env.PORT || 3000;
-const server = http.createServer((req, res) => {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('WhatsApp Bot Server Running - Sand Point Global');
-});
-server.listen(PORT, () => {
-  console.log(`🌐 Server listening on port ${PORT}`);
-});
-
+startServer();
 connectToWhatsApp().catch(console.error);
