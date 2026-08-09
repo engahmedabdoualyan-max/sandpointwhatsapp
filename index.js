@@ -1251,25 +1251,11 @@ async function connectToWhatsApp() {
         const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
         console.log('\n❌ Disconnected:', lastDisconnect?.error?.message);
 
-        if (!shouldReconnect || statusCode === DisconnectReason.badSession || statusCode === DisconnectReason.connectionFailure) {
-          console.log('🗑️  Cleaning corrupted session files...');
-          try {
-            rmSync(join(__dirname, 'auth_info'), { recursive: true, force: true });
-            console.log('✅ auth_info cleared');
-          } catch (cleanupErr) {
-            console.log('⚠️ Cleanup error:', cleanupErr.message);
-          }
-
-          if (pairingAttempted) {
-            console.log('🔄 Restarting with fresh session for QR fallback...\n');
-            pairingAttempted = false;
-            setTimeout(connectToWhatsApp, 2000);
-          }
-        } else if (shouldReconnect) {
+        if (shouldReconnect) {
           console.log('🔄 Reconnecting...\n');
           setTimeout(connectToWhatsApp, 5000);
         } else {
-          console.log('🔐 Logged out. Clearing session and retrying...\n');
+          console.log('🔐 Logged out. Please scan QR again.\n');
           pairingAttempted = false;
           setTimeout(connectToWhatsApp, 5000);
         }
