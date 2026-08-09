@@ -1149,10 +1149,11 @@ async function handleMessage(sock, m) {
 }
 
 let currentQrData = null;
+let pairingAttempted = false;
 
 async function connectToWhatsApp() {
   try {
-    console.log('\n🔄 Connecting to WhatsApp...');
+    console.log('\n🔄 Starting WhatsApp connection...');
 
     const { state, saveCreds } = await useMultiFileAuthState(join(__dirname, 'auth_info'));
 
@@ -1165,6 +1166,22 @@ async function connectToWhatsApp() {
       printQRInTerminal: false,
       browser: ['SAND POINT Bot', 'Safari', '1.0.0']
     });
+
+    if (!pairingAttempted) {
+      pairingAttempted = true;
+      const PHONE_NUMBER = '+966543120557';
+      console.log('\n📱 Requesting pairing code for:', PHONE_NUMBER);
+      try {
+        const code = await sock.requestPairingCode(PHONE_NUMBER.replace(/\D/g, ''));
+        console.log('\n🔐 ============================================');
+        console.log('🔑 PAIRING CODE:', code);
+        console.log('   Enter this code on your phone to connect');
+        console.log('🔐 ============================================\n');
+      } catch (err) {
+        console.log('\n❌ Pairing code failed:', err.message);
+        console.log('   Falling back to QR code mode...\n');
+      }
+    }
 
     sock.ev.on('connection.update', async (update) => {
       const { connection, lastDisconnect, qr } = update;
@@ -1186,6 +1203,7 @@ async function connectToWhatsApp() {
       if (connection === 'open') {
         console.log('\n✅ Connected to WhatsApp!');
         console.log('🤖 Bot ready (7 languages + anti-ban protection)...\n');
+        currentQrData = null;
       }
 
       if (connection === 'close') {
@@ -1193,7 +1211,7 @@ async function connectToWhatsApp() {
         const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
         console.log('\n❌ Disconnected:', lastDisconnect?.error?.message);
 
-        if (!shouldReconnect || (statusCode === DisconnectReason.badSession || statusCode === DisconnectReason.connectionFailure)) {
+        if (!shouldReconnect || statusCode === DisconnectReason.badSession || statusCode === DisconnectReason.connectionFailure) {
           console.log('🗑️  Cleaning corrupted session files...');
           try {
             rmSync(join(__dirname, 'auth_info'), { recursive: true, force: true });
@@ -1201,13 +1219,19 @@ async function connectToWhatsApp() {
           } catch (cleanupErr) {
             console.log('⚠️ Cleanup error:', cleanupErr.message);
           }
-        }
 
-        if (shouldReconnect) {
+          if (pairingAttempted) {
+            console.log('🔄 Restarting with fresh session for QR fallback...\n');
+            pairingAttempted = false;
+            setTimeout(connectToWhatsApp, 2000);
+          }
+        } else if (shouldReconnect) {
           console.log('🔄 Reconnecting...\n');
           setTimeout(connectToWhatsApp, 5000);
         } else {
-          console.log('🔐 Logged out. Deleting session. Scan QR again.');
+          console.log('🔐 Logged out. Clearing session and retrying...\n');
+          pairingAttempted = false;
+          setTimeout(connectToWhatsApp, 5000);
         }
       }
     });
