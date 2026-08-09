@@ -1160,8 +1160,23 @@ async function connectToWhatsApp() {
     version,
     auth: state,
     printQRInTerminal: false,
-    browser: ['SAND POINT Bot', 'Chrome', '1.0.0']
+    browser: ['SAND POINT Bot', 'Safari', '1.0.0']
   });
+  
+  const PHONE_NUMBER = process.env.WA_PHONE_NUMBER;
+  if (PHONE_NUMBER) {
+    console.log('\n📱 Attempting pairing code authentication for:', PHONE_NUMBER);
+    try {
+      const code = await sock.requestPairingCode(PHONE_NUMBER.replace(/\D/g, ''));
+      console.log('\n🔐 ============================================');
+      console.log('🔑 PAIRING CODE:', code);
+      console.log('   (8-digit code for WhatsApp pairing)');
+      console.log('🔐 ============================================\n');
+    } catch (err) {
+      console.log('\n❌ Pairing code failed:', err.message);
+      console.log('   Falling back to QR code mode...\n');
+    }
+  }
   
   sock.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect, qr } = update;
