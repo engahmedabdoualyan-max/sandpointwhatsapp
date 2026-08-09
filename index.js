@@ -4,6 +4,7 @@ import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import http from 'http';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -956,7 +957,6 @@ loadUsers();
 console.log('🚀 بدء تشغيل بوت ساند بوينت العالمية (7 لغات + مضادات حظر إنسانيات)...');
 
 const PORT = process.env.PORT || 3000;
-const http = require('http');
 const server = http.createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/plain' });
   res.end('WhatsApp Bot Server Running - Sand Point Global');
