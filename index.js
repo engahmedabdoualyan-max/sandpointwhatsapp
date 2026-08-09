@@ -159,7 +159,34 @@ const LANG_MESSAGES = {
       engineer_prompt: '✅ عشان يتم فرز طلبك والتواصل مع القسم المناسب، يرجى إرفاق السيرة الذاتية (PDF) الآن. أو اكتب **تم** للمتابعة بدون ملف.',
       worker_prompt: '✅ عشان نطلع على خبرتك ومهاراتك، يرجى إرفاق صور أو فيديوهات من أعمال سابقة. أو اكتب **تم** للمتابعة.'
     },
-    summary: '✅ تم استلام طلبك بنجاح!\n📋 البيانات المسجلة:\n• الاسم: {name}\n• الجوال: {phone}\n• التفاصيل: {details}\n\n📞 هاتفنا: +966 543120557\n🕐 بنتواصل معاك خلال 24 ساعة إن شاء الله.\nشكراً لوثوقك بساند بوينت العالمية 🌟\n\n📝 اكتب **5** للعودة للقائمة الرئيسية أو **0** للتواصل مباشرة...'
+    summary: '✅ تم استلام طلبك بنجاح!\\n📋 البيانات المسجلة:\\n• الاسم: {name}\\n• الجوال: {phone}\\n• التفاصيل: {details}\\n\\n📞 هاتفنا: +966 543120557\\n🕐 بنتواصل معاك خلال 24 ساعة إن شاء الله.\\nشكراً لوثوقك بساند بوينت العالمية 🌟\\n\\n📝 اكتب **5** للعودة للقائمة الرئيسية أو **0** للتواصل مباشرة...',
+    menuTitle: '📋 قائمة الخدمات - ساند بوينت العالمية',
+    menuOptions: [
+      {
+        title: 'خدماتنا',
+        rows: [
+          { title: '1️⃣ عميل جديد', description: 'طلب عرض سعر أو استفسار' },
+          { title: '2️⃣ مقاول/مورد', description: 'التعاون مع شركة ساند بوينت' },
+          { title: '3️⃣ باحث عن عمل', description: 'الانضمام إلى فريقنا' },
+          { title: '4️⃣ ملف الشركة', description: 'معرفة المزيد عنا' },
+          { title: '5️⃣ بيانات التواصل', description: 'أرقامنا وساعات العمل' }
+        ]
+      }
+    ],
+    languageList: [
+      {
+        title: '🌍 اختر لغة التواصل',
+        rows: [
+          { title: '1. العربية 🇸🇦', description: 'اللهجة السعودية' },
+          { title: '2. English 🇬🇧', description: 'English language' },
+          { title: '3. اردو (Urdu) 🇵🇰', description: 'اردو زبان' },
+          { title: '4. नेपाली (Nepali) 🇳🇵', description: 'नेपाली भाषा' },
+          { title: '5. বাংলা (Bengali) 🇧🇩', description: 'বাংলা ভাষা' },
+          { title: '6. हिंदी (Hindi) 🇮🇳', description: 'हिंदी भाषा' },
+          { title: '7. Tagalog (Filipino) 🇵🇭', description: 'Tagalog na wika' }
+        ]
+      }
+    ]
   },
   en: {
     greeting: `Welcome to Sand Point Global Contracting (SAND POINT GLOBAL) - Dammam 🏗️
@@ -242,7 +269,34 @@ Friday - Saturday: Closed
       engineer_prompt: '✅ Your application will be reviewed by our engineering department. Please attach your CV (PDF). Or type **done** to proceed without a file.',
       worker_prompt: '✅ In order to assess your skills properly, please attach photos or videos of your previous work. Or type **done** to proceed without files.'
     },
-    summary: '✅ Your request has been received successfully!\n📋 Registered details:\n• Name: {name}\n• Mobile: {phone}\n• Details: {details}\n\n📞 Our phone: +966 543120557\n🕐 We will contact you within 24 hours.\nThank you for trusting Sand Point Global 🌟\n\n📝 Enter **5** for main menu or **0** for direct contact...'
+    summary: '✅ Your request has been received successfully!\n📋 Registered details:\n• Name: {name}\n• Mobile: {phone}\n• Details: {details}\n\n📞 Our phone: +966 543120557\n🕐 We will contact you within 24 hours.\nThank you for trusting Sand Point Global 🌟\n\n📝 Enter **5** for main menu or **0** for direct contact...',
+    menuTitle: '📋 Service Menu - Sand Point Global',
+    menuOptions: [
+      {
+        title: 'Our Services',
+        rows: [
+          { title: '1️⃣ New Client', description: 'Request a quote or inquiry' },
+          { title: '2️⃣ Subcontractor', description: 'Partner with Sand Point' },
+          { title: '3️⃣ Job Seeker', description: 'Join our team' },
+          { title: '4️⃣ Company Profile', description: 'Learn more about us' },
+          { title: '5️⃣ Contact Info', description: 'Our address and working hours' }
+        ]
+      }
+    ],
+    languageList: [
+      {
+        title: '🌍 Choose your language',
+        rows: [
+          { title: '1. العربية 🇸🇦', description: 'Saudi dialect' },
+          { title: '2. English 🇬🇧', description: 'English language' },
+          { title: '3. اردو (Urdu) 🇵🇰', description: 'اردو زبان' },
+          { title: '4. नेपाली (Nepali) 🇳🇵', description: 'नेपाली भाषा' },
+          { title: '5. বাংলা (Bengali) 🇧🇩', description: 'বাংলা ভাষা' },
+          { title: '6. हिंदी (Hindi) 🇮🇳', description: 'हिंदी भाषा' },
+          { title: '7. Tagalog (Filipino) 🇵🇭', description: 'Tagalog na wika' }
+        ]
+      }
+    ]
   },
   ur: {
     greeting: `سینڈ پوائنٹ گلوبل کانٹریکٹنگ (SAND POINT GLOBAL) - جلیل میں سواگت ہے 🏗️
@@ -325,7 +379,34 @@ Friday - Saturday: Closed
       engineer_prompt: '✅ آپ کی درخواست ہمارے انجینئری واحد کے لیے موصول ہوگئی۔ براہ کرم اپنا CV (PDF) ایٹیچ کریں۔ یا بغیر فائل کے آگے بڑھنے کے لئے **done** لکھیں۔',
       worker_prompt: '✅ آپ کی صلاحیت کے لئے براہ کرم اپنے پچھلے کام کی تصاویر یا ویڈیو ایڈیٹ کریں۔ یا بغیر فائل کے آگے بڑھنے کے لئے **done** لکھیں۔'
     },
-    summary: `✅ آپ کا درخواست برائے موصول!\n📋 درج شدہ تفصیلات:\n• نام: {name}\n• موبائل: {phone}\n• تفصیلات: {details}\n\n📞 ہمارا فون: +966 543120557\n🕐 ہم 24 گھنٹے کے اندر آپ سے رابطے کریں گے۔\nسینڈ پوائنٹ گلوبل پر بھروسے کے لئے شکریہ 🌟\n\n📝 مرکزی مینو کے لیے **5** لکھیں یا سیمیل رابطے کیلئے **0** لکچیں...`
+    summary: `✅ آپ کا درخواست برائے موصول!\n📋 درج شدہ تفصیلات:\n• نام: {name}\n• موبائل: {phone}\n• تفصیلات: {details}\n\n📞 ہمارا فون: +966 543120557\n🕐 ہم 24 گھنٹے کے اندر آپ سے رابطے کریں گے۔\nسینڈ پوائنٹ گلوبل پر بھروسے کے لئے شکریہ 🌟\n\n📝 مرکزی مینو کے لیے **5** لکھیں یا سیمیل رابطے کیلئے **0** لکچیں...`,
+    menuTitle: '📋 سروسز کی مینو - سینڈ پوائنٹ گلوبل',
+    menuOptions: [
+      {
+        title: 'ہماری سروسز',
+        rows: [
+          { title: '1️⃣ نیو کلائنٹ', description: 'کوٹ کی درخواست یا استفسار' },
+          { title: '2️⃣ سب کونٹراکٹر', description: 'سینڈ پوائنٹ کے ساتھ شراکت' },
+          { title: '3️⃣ جاب سیکر', description: 'ہماری ٹیم میں شامل ہوں' },
+          { title: '4️⃣ کمپنی پروفائل', description: 'ہمارے بارے میں مزید جانیں' },
+          { title: '5️⃣ رابطہ معلومات', description: 'ہمارا پتہ، فون اور کام کے اوقات' }
+        ]
+      }
+    ],
+    languageList: [
+      {
+        title: '🌍 اپنا زبان منتخب کریں',
+        rows: [
+          { title: '1. العربية 🇸🇦', description: 'ساؤڈی ڈیئلیکٹ' },
+          { title: '2. English 🇬🇧', description: 'انگریزی زبان' },
+          { title: '3. اردو (Urdu) 🇵🇰', description: 'اردو زبان' },
+          { title: '4. नेपाली (Nepali) 🇳🇵', description: 'नेपाली भाषा' },
+          { title: '5. বাংলা (Bengali) 🇧🇩', description: 'বাংলা ভাষা' },
+          { title: '6. हिंदी (Hindi) 🇮🇳', description: 'हिंदी भाषा' },
+          { title: '7. Tagalog (Filipino) 🇵🇭', description: 'Tagalog na wika' }
+        ]
+      }
+    ]
   },
   ne: {
     greeting: `स्यान्ड पोइंट ग्लोबल कन्ट्राक्टिङ (SAND POINT GLOBAL) - दम्मममा स्वागत छ 🏗️
@@ -408,7 +489,34 @@ Friday - Saturday: Closed
       engineer_prompt: '✅ तपाईंको आवेदन हाम्रो इन्जिनियरिङ विभागमा पुग्नेछ। कृपया आफ्नो CV (PDF) संलग्न गर्नुहोस्। वा फाइल बिना अगाडि बढ्न **done** लेख्नुहोस्।',
       worker_prompt: '✅ तपाईंको क्षमता मूल्यांकन गर्न हामीलाई तपाईंको अघिल्लो कामका फोटो वा भिडियो चाहिए। वा फाइल बिना अगाडि बढ्न **done** लेख्नुहोस्।'
     },
-    summary: `✅ तपाईंको अनुरोध सफलतापूर्वक प्राप्त भयो!\n📋 दर्ता विवरण:\n• नाम: {name}\n• मोबाइल: {phone}\n• विवरण: {details}\n\n📞 हाम्रो फोन: +966 543120557\n🕐 हामीले 24 घण्टाभित्र तपाईंसँग सम्पर्क गर्नेछौं।\nस्यान्ड पोइंट ग्लोबलमा विश्वास गर्नुभएकोमा धन्यवाद 🌟\n\n📝 मुख्य मेनुमा फर्कन **5** लेख्नुहोस् वा सम्पर्क **0** लिख्नुहोस्...`
+    summary: `✅ तपाईंको अनुरोध सफलतापूर्वक प्राप्त भयो!\n📋 दर्ता विवरण:\n• नाम: {name}\n• मोबाइल: {phone}\n• विवरण: {details}\n\n📞 हाम्रो फोन: +966 543120557\n🕐 हामीले 24 घण्टाभित्र तपाईंसँग सम्पर्क गर्नेछौं।\nस्यान्ड पोइंट ग्लोबलमा विश्वास गर्नुभएकोमा धन्यवाद 🌟\n\n📝 मुख्य मेनुमा फर्कन **5** लेख्नुहोस् वा सम्पर्क **0** लिख्नुहोस्...`,
+    menuTitle: '📋 सेवा मेनु - स्यान्ड पोइंट ग्लोबल',
+    menuOptions: [
+      {
+        title: 'हामीको सेवाहरू',
+        rows: [
+          { title: '1️⃣ नयाँ ग्राहक', description: 'मूल्य अनुमान वा प्रश्न' },
+          { title: '2️⃣ सबकन्ट्राक्टर', description: 'स्यान्ड पोइंटको साथ साझेदारी' },
+          { title: '3️⃣ रोजगारीको खोजी', description: 'हामी टोलीमा जोड्नुहोस्' },
+          { title: '4️⃣ कम्पनी प्रोफाइल', description: 'हामीबारे थप जान्नुहोस्' },
+          { title: '5️⃣ सम्पर्क जानकारी', description: 'हाम्रो ठेगाना र कामको समय' }
+        ]
+      }
+    ],
+    languageList: [
+      {
+        title: '🌍 तपाईंको भाषा छान्नुहोस्',
+        rows: [
+          { title: '1. العربية 🇸🇦', description: 'साउदी डिऐलेक्ट' },
+          { title: '2. English 🇬🇧', description: 'इंग्लिश भाषा' },
+          { title: '3. اردو (Urdu) 🇵🇰', description: 'उर्दु भाषा' },
+          { title: '4. नेपाली (Nepali) 🇳🇵', description: 'नेपाली भाषा' },
+          { title: '5. বাংলা (Bengali) 🇧🇩', description: 'बंग्ला भाषा' },
+          { title: '6. हिंदी (Hindi) 🇮🇳', description: 'हिन्दी भाषा' },
+          { title: '7. Tagalog (Filipino) 🇵🇭', description: 'ट्यागालग भाषा' }
+        ]
+      }
+    ]
   },
   bn: {
     greeting: `স্যান্ড পয়েন্ট গ্লোবাল কন্ট্রাক্টিং (SAND POINT GLOBAL) - ঢাকামে স্বাগতম 🏗️
@@ -491,7 +599,34 @@ Friday - Saturday: Closed
       engineer_prompt: '✅ আপনার আবেদনটি আমাদের ইঞ্জিনিয়ারিং বিভাগে পাঠানো হবে। অনুগ্রহ করে আপনার CV (PDF) সংযুক্ত করুন। অথবা ফাইল ছাড়া চালিয়ে জানতে **done** লিখুন।',
       worker_prompt: '✅ আপনার দক্ষতা মূল্যায়ন করতে অনুগ্রহ করে আপনার পূর্বের কাজের ছবি বা ভিডিও সংযুক্ত করুন। অথবা ফাইল ছাড়া চালিয়ে জানতে **done** লিখুন।'
     },
-    summary: `✅ আপনার অনুরোধটি সফলভাবে গৃহীত হয়েছে!\n📋 রেজিস্টার করা বিবরণী:\n• নাম: {name}\n• মোবাইল: {phone}\n• বিবরণী: {details}\n\n📞 আমাদের ফোন: +966 543120557\n🕐 আমরা 24 ঘণ্টার মধ্যে আপনার সাথে যুক্ত হব।\nস্যান্ড পয়েন্ট গ্লোবাল-এ আপনার বিশ্বাসের জন্য ধন্যবাদ 🌟\n\n📝 মূল মেনুতে ফিরতি **5** লিখুন বা সরাসরি যোগাযোগ **0** লিখুন...`
+    summary: `✅ আপনার অনুরোধটি সফলভাবে গৃহীত হয়েছে!\n📋 রেজিস্টার করা বিবরণী:\n• নাম: {name}\n• মোবাইল: {phone}\n• বিবরণী: {details}\n\n📞 আমাদের ফোন: +966 543120557\n🕐 আমরা 24 ঘণ্টার মধ্যে আপনার সাথে যুক্ত হব।\nস্যান্ড পয়েন্ট গ্লোবাল-এ আপনার বিশ্বাসের জন্য ধন্যবাদ 🌟\n\n📝 মূল মেনুতে ফিরতি **5** লিখুন বা সরাসরি যোগাযোগ **0** লিখুন...`,
+    menuTitle: '📋 সেবা মেনু - স্যান্ড পয়েন্ট গ্লোবাল',
+    menuOptions: [
+      {
+        title: 'আমাদের সেবাগুলি',
+        rows: [
+          { title: '1️⃣ নতুন গ্রাহক', description: 'মূল্য আঁচন বা প্রশ্ন' },
+          { title: '2️⃣ সাবকন্ট্রাক্টর', description: 'স্যান্ড পয়েন্টের সাথে অংশীদারশী' },
+          { title: '3️⃣ চাকরীর অনুসন্ধান', description: 'আমাদের দলে যুক্ত হন' },
+          { title: '4️⃣ কোম্পানি প্রোফাইল', description: 'আমাদের সম্পর্কে আরও জানুন' },
+          { title: '5️⃣ যোগাযোগের তথ্য', description: 'আমাদের ঠিঠি এবং কাজের সময়' }
+        ]
+      }
+    ],
+    languageList: [
+      {
+        title: '🌍 আপনার ভাষা নির্বাচন করুন',
+        rows: [
+          { title: '1. العربية 🇸🇦', description: 'সৌদি ডিয়ালেক্ট' },
+          { title: '2. English 🇬🇧', description: 'ইংরেজি ভাষা' },
+          { title: '3. اردو (Urdu) 🇵🇰', description: 'উর্দু ভাষা' },
+          { title: '4. नेपाली (Nepali) 🇳🇵', description: 'নেপালি ভাষা' },
+          { title: '5. বাংলা (Bengali) 🇧🇩', description: 'বাংলা ভাষা' },
+          { title: '6. हिंदी (Hindi) 🇮🇳', description: 'হিন্দি ভাষা' },
+          { title: '7. Tagalog (Filipino) 🇵🇭', description: 'ট্যাগালog ভাষা' }
+        ]
+      }
+    ]
   },
   hi: {
     greeting: `सैंड पॉइंट ग्लोबल कंट्राक्टिंग (SAND POINT GLOBAL) - दम्मम में स्वागत है 🏗️
@@ -574,7 +709,34 @@ Friday - Saturday: Closed
       engineer_prompt: '✅ आपका आवेदन हमारे इंजीनियरिंग विभाग के पास पहुंचेगा। कृपया अपना CV (PDF) संलग्न करें। या बिना फ़ाइल के आगे बढ़ने के लिए **done** लिखें।',
       worker_prompt: '✅ आपकी प्रतिभा का मूल्यांकन करने के लिए कृपया अपने पिछले काम की तस्वीरें या वीडियो संलग्न करें। या बिना फ़ाइल के आगे बढ़ने के लिए **done** लिखें।'
     },
-    summary: `✅ आपका अनुरोध सफलतापूर्वक प्राप्त हो गया!\n📋 दर्ज विवरण:\n• नाम: {name}\n• मोबाइल: {phone}\n• विवरण: {details}\n\n📞 हमारा फ़ोन: +966 543120557\n🕐 हम 24 घंटे के भीतर आपसे संपर्क करेंगे।\nसैंड पॉइंट ग्लोबल पर भरोसेमंद होने के लिए धन्यवाद 🌟\n\n📝 मुख्य मेन्यू में वापसी हेतु **5** लिखें या संपर्क **0** लिखें...`
+    summary: `✅ आपका अनुरोध सफलतापूर्वक प्राप्त हो गया!\n📋 दर्ज विवरण:\n• नाम: {name}\n• मोबाइल: {phone}\n• विवरण: {details}\n\n📞 हमारा फ़ोन: +966 543120557\n🕐 हम 24 घंटे के भीतर आपसे संपर्क करेंगे।\nसैंड पॉइंट ग्लोबल पर भरोसेमंद होने के लिए धन्यवाद 🌟\n\n📝 मुख्य मेन्यू में वापसी हेतु **5** लिखें या संपर्क **0** लिखें...`,
+    menuTitle: '📋 सेवा मेन्यू - सैंड पॉइंट ग्लोबल',
+    menuOptions: [
+      {
+        title: 'हमारी सेवाएं',
+        rows: [
+          { title: '1️⃣ नए ग्राहक', description: 'कीमत अनुमान या प्रश्न' },
+          { title: '2️⃣ सबकंट्राक्टर', description: 'सैंड पॉइंट के साथ साझेदारी' },
+          { title: '3️⃣ नौकरी की तलाश', description: 'हमारी टीम में जुड़ें' },
+          { title: '4️⃣ कंपनी प्रोफाइल', description: 'हमांरे बारे में अधिक जानें' },
+          { title: '5️⃣ संपर्क जानकारी', description: 'हमारा पता, फोन और काम का समय' }
+        ]
+      }
+    ],
+    languageList: [
+      {
+        title: '🌍 अपनी भाषा चुनें',
+        rows: [
+          { title: '1. العربية 🇸🇦', description: 'साउदी डायलैक्ट' },
+          { title: '2. English 🇬🇧', description: 'इंग्लिश भाषा' },
+          { title: '3. اردو (Urdu) 🇵🇰', description: 'उर्दु भाषा' },
+          { title: '4. नेपाली (Nepali) 🇳🇵', description: 'नेपाली भाषा' },
+          { title: '5. বাংলা (Bengali) 🇧🇩', description: 'बंग्ला भाषा' },
+          { title: '6. हिंदी (Hindi) 🇮🇳', description: 'हिंदी भाषा' },
+          { title: '7. Tagalog (Filipino) 🇵🇭', description: 'टैगालॉग भाषा' }
+        ]
+      }
+    ]
   },
   tl: {
     greeting: `Tugon sa Sand Point Global Contracting (SAND POINT GLOBAL) - Dammam 🏗️
@@ -657,7 +819,34 @@ Biyernes - Sabado: Sarado
       engineer_prompt: '✅ Ang iyong application ay isusuri ng aming engineering departamento. Paki-attach ang iyong CV (PDF). O i-type **done** kung wala kang file.',
       worker_prompt: '✅ Upang masuri ang kompetensya mo, pakisamang mga litrato o video ng iyong nakaraang trabaho. O i-type **done** kung wala kang file.'
     },
-    summary: `✅ Natanggap ang iyong kahilingan!\n📋 Detalye:\n• Pangalan: {name}\n• Mobile: {phone}\n• Detalye: {details}\n\n📞 Telepono namin: +966 543120557\n🕐 Makikipag-ugnayan kami sa loob ng 24 na oras.\nSalamat sa tiwala sa Sand Point Global 🌟\n\n📝 I-to **5** para sa pangunahing menu o **0** para sa direkta makikipag-ugnayan...`
+    summary: `✅ Natanggap ang iyong kahilingan!\n📋 Detalye:\n• Pangalan: {name}\n• Mobile: {phone}\n• Detalye: {details}\n\n📞 Telepono namin: +966 543120557\n🕐 Makikipag-ugnayan kami sa loob ng 24 na oras.\nSalamat sa tiwala sa Sand Point Global 🌟\n\n📝 I-to **5** para sa pangunahing menu o **0** para sa direkta makikipag-ugnayan...`,
+    menuTitle: '📋 Serbisyong Menu - Sand Point Global',
+    menuOptions: [
+      {
+        title: 'Aming Mga Serbisyo',
+        rows: [
+          { title: '1️⃣ Bagong Kliyente', description: 'Hilingin ang presyo o query' },
+          { title: '2️⃣ Subcontractor', description: 'Maging partner ng Sand Point' },
+          { title: '3️⃣ Job Seeker', description: 'Sumali sa aming koponan' },
+          { title: '4️⃣ Kumpanya na Profile', description: 'Alamin pa tungkol sa amin' },
+          { title: '5️⃣ Contact Info', description: 'Atin, telepono, at oras ng trabaho' }
+        ]
+      }
+    ],
+    languageList: [
+      {
+        title: '🌍 Piliin ang iyong wika',
+        rows: [
+          { title: '1. العربية 🇸🇦', description: 'Saudi dialect' },
+          { title: '2. English 🇬🇧', description: 'English language' },
+          { title: '3. اردو (Urdu) 🇵🇰', description: 'اردو زبان' },
+          { title: '4. नेपाली (Nepali) 🇳🇵', description: 'नेपाली भाषा' },
+          { title: '5. বাংলা (Bengali) 🇧🇩', description: 'বাংলা ভাষা' },
+          { title: '6. हिंदी (Hindi) 🇮🇳', description: 'हिंदी भाषा' },
+          { title: '7. Tagalog (Filipino) 🇵🇭', description: 'Tagalog na wika' }
+        ]
+      }
+    ]
   }
 };
 
@@ -680,6 +869,68 @@ const LANGUAGE_SELECTION = `Welcome to Sand Point Global Contracting 🏗️
 5. বাংলা (Bengali) 🇧🇩
 6. हिंदी (Hindi) 🇮🇳
 7. Tagalog (Filipino) 🇵🇭`;
+
+async function sendListMessage(sock, userId, text, title, sections) {
+  try {
+    await sock.sendPresenceUpdate('composing', userId);
+  } catch (e) {}
+  await humanDelay();
+  
+  const listMessage = {
+    text,
+    footer: 'Sand Point Global - اختر من القائمة أدناه / Choose from the list below',
+    title,
+    buttonText: 'عرض القائمة / View List',
+    sections
+  };
+  
+  await sock.sendMessage(userId, listMessage);
+}
+
+async function sendLanguageList(sock, userId) {
+  try {
+    await sock.sendPresenceUpdate('composing', userId);
+  } catch (e) {}
+  await humanDelay();
+  
+  const sections = LANG_MESSAGES.ar.languageList;
+  const listMessage = {
+    text: LANGUAGE_SELECTION,
+    footer: 'Sand Point Global - اختر لغتك / Choose your language',
+    title: '🌍 اختر اللغة / Choose Language',
+    buttonText: 'اختر اللغة / Choose Language',
+    sections
+  };
+  
+  await sock.sendMessage(userId, listMessage);
+}
+
+async function sendProfessionList(sock, userId, t, userState) {
+  try {
+    await sock.sendPresenceUpdate('composing', userId);
+  } catch (e) {}
+  await humanDelay();
+  
+  const lang = userState.language || 'en';
+  const sections = [{
+    title: lang === 'ar' ? 'المهن / Professions' : 'Professions',
+    rows: [
+      { title: lang === 'ar' ? '👨‍💼 مهندس' : '👨‍💼 Engineer', description: lang === 'ar' ? 'مهندس مدنى أو ميكانيكي' : 'Civil or Mechanical Engineer' },
+      { title: lang === 'ar' ? '🔧 تقني' : '🔧 Technician', description: lang === 'ar' ? 'تقني مختبر' : 'Lab Technician or Supervisor' },
+      { title: lang === 'ar' ? '👷 عامل' : '👷 Worker', description: lang === 'ar' ? 'عامل بناء أو نجار' : 'Construction Worker or Carpenter' }
+    ]
+  }];
+  
+  const listMessage = {
+    text: t.options['3'],
+    footer: 'Sand Point Global - اختر مهنتك / Choose your profession',
+    title: '💼 ' + (lang === 'ar' ? 'ماهي مهنتك؟' : 'What is your profession?'),
+    buttonText: lang === 'ar' ? 'اختر المهنة' : 'Choose Profession',
+    sections
+  };
+  
+  await sock.sendMessage(userId, listMessage);
+}
 
 async function handleMessage(sock, m) {
   if (!m.message) return;
@@ -731,7 +982,7 @@ async function handleMessage(sock, m) {
   
   if (text === '/start' || text === 'restart' || text.toLowerCase() === 'cancel') {
     resetUserState(userId);
-    await sendMsg(LANGUAGE_SELECTION);
+    await sendLanguageList(sock, userId);
     return;
   }
   
@@ -748,11 +999,13 @@ async function handleMessage(sock, m) {
   
   if (userState.step === 'language') {
     if (['1', '2', '3', '4', '5', '6', '7'].includes(text)) {
-      const lang = LANG_CODES[text];
-      updateUserState(userId, { language: lang, step: 'greeting', category: null });
-      await sendMsg(LANG_MESSAGES[lang].greeting);
+      const langCode = LANG_CODES[text];
+      updateUserState(userId, { language: langCode, step: 'greeting', category: null });
+      await sendMsg(LANG_MESSAGES[langCode].greeting);
+      const tLang = LANG_MESSAGES[langCode];
+      await sendListMessage(sock, userId, tLang.greeting, tLang.menuTitle, tLang.menuOptions);
     } else {
-      await sendMsg(LANGUAGE_SELECTION);
+      await sendLanguageList(sock, userId);
     }
     return;
   }
@@ -762,6 +1015,7 @@ async function handleMessage(sock, m) {
   
   if (text === '5' && userState.step !== 'greeting') {
     await sendMsg(t.greeting);
+    await sendListMessage(sock, userId, t.greeting, t.menuTitle, t.menuOptions);
     updateUserState(userId, { step: 'greeting' });
     return;
   }
@@ -770,19 +1024,19 @@ async function handleMessage(sock, m) {
     if (['1', '2', '3', '4', '5'].includes(text)) {
       if (text === '4' || text === '5') {
         await sendMsg(t.options[text]);
+        await sendListMessage(sock, userId, t.greeting, t.menuTitle, t.menuOptions);
         return;
       }
       if (text === '3') {
         updateUserState(userId, { step: 'collect_profession', category: text });
+        await sendProfessionList(sock, userId, t, userState);
+        return;
       } else {
         updateUserState(userId, { step: 'collect_name', category: text });
       }
       await sendMsg(t.options[text]);
     } else {
-      const invalidMsg = lang === 'ar' 
-        ? '❌ خيار غير صحيح. الحين اكتب رقم من 1 إلى 5.\n\n' 
-        : '❌ Invalid option. Please enter a number from 1 to 5.\n\n';
-      await sendMsg(invalidMsg + t.greeting);
+      await sendListMessage(sock, userId, t.greeting, t.menuTitle, t.menuOptions);
     }
     return;
   }
@@ -790,27 +1044,19 @@ async function handleMessage(sock, m) {
   if (userState.step === 'collect_profession') {
     const lowerText = text.toLowerCase();
     let profession = null;
-    if (lang === 'ar') {
-      if (lowerText.includes('مهندس') || lowerText.includes('engineer')) profession = 'engineer';
-      else if (lowerText.includes('تقني') || lowerText.includes('technician')) profession = 'technician';
-      else if (lowerText.includes('مهنة') || lowerText.includes('عامل') || lowerText.includes('worker') || lowerText.includes('مهن')) profession = 'worker';
-    } else if (lang === 'en' || lang === 'tl') {
-      if (lowerText.includes('eng')) profession = 'engineer';
-      else if (lowerText.includes('tech')) profession = 'technician';
-      else if (lowerText.includes('work') || lowerText.includes('labor')) profession = 'worker';
-    } else if (lang === 'ur' || lang === 'hi' || lang === 'bn') {
-      if (lowerText.includes('انجینئر') || lowerText.includes('इन्जिनियर') || lowerText.includes('ইঞ্জিনিয়ার')) profession = 'engineer';
-      else if (lowerText.includes('ٹیکنیشن') || lowerText.includes('टेक्निशियन') || lowerText.includes('টেকনিসিয়ান')) profession = 'technician';
-      else if (lowerText.includes('worker') || lowerText.includes('مزدور') || lowerText.includes('मजदुर') || lowerText.includes('মজুর') || lowerText.includes('worker') || lowerText.includes('trabaho')) profession = 'worker';
-    } else if (lang === 'ne') {
-      if (lowerText.includes('इन्जिनियर')) profession = 'engineer';
-      else if (lowerText.includes('टेक्निशियन')) profession = 'technician';
-      else if (lowerText.includes('मजदुर') || lowerText.includes('worker')) profession = 'worker';
+    
+    // Check for list message responses (row titles)
+    if (lowerText.includes('engineer') || lowerText.includes('مهندس') || lowerText.includes('इन्जिनियर') || lowerText.includes('ইঞ্জিনিয়ার')) {
+      profession = 'engineer';
+    } else if (lowerText.includes('technician') || lowerText.includes('تقني') || lowerText.includes('टेक्निशियन') || lowerText.includes('টেকনিসিয়ান')) {
+      profession = 'technician';
+    } else if (lowerText.includes('worker') || lowerText.includes('عامل') || lowerText.includes('مزدور') || lowerText.includes('मजदुर') || lowerText.includes('মজুর') || lowerText.includes('trabaho') || lowerText.includes('manggagawa')) {
+      profession = 'worker';
     }
     
     if (profession) {
       updateUserState(userId, { profession: profession, step: 'collect_name' });
-      await sendMsg(`✅ ${t.prompts.thank_you}\n${lang === 'ar' ? 'الآن نحتاج' : lang === 'en' ? 'Now we need' : lang === 'ur' ? 'اب ہم ضرورت رکھتے ہیں' : lang === 'tl' ? 'Ngayon kailangan namin' : 'अब हम चाहिए'}\n• ${t.prompts.name}\n• ${t.prompts.phone}\n📝 ${lang === 'ar' ? 'ابدأ بـ' : 'Start with'} **${t.prompts.name}**...`);
+      await sendMsg(`✅ ${t.prompts.thank_you}\n${lang === 'ar' ? 'الآن نحتاج' : lang === 'en' ? 'Now we need' : lang === 'tl' ? 'Ngayon kailangan namin' : 'अब हम चाहिए'}\n• ${t.prompts.name}\n• ${t.prompts.phone}\n📝 ${lang === 'ar' ? 'ابدأ بـ' : 'Start with'} **${t.prompts.name}**...`);
     } else {
       const professionOptions = lang === 'ar' ? '(مهندس، تقني، أم عامل)' : '(Engineer, Technician, or Worker)';
       await sendMsg('❌ ' + t.prompts.invalid_profession + ' ' + professionOptions + '...');
