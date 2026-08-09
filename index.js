@@ -1152,6 +1152,8 @@ let currentQrData = null;
 
 async function connectToWhatsApp() {
   try {
+    console.log('\n🔄 Connecting to WhatsApp...');
+
     const { state, saveCreds } = await useMultiFileAuthState(join(__dirname, 'auth_info'));
 
     const { version, isLatest } = await fetchLatestBaileysVersion();
@@ -1164,21 +1166,6 @@ async function connectToWhatsApp() {
       browser: ['SAND POINT Bot', 'Safari', '1.0.0']
     });
 
-    const PHONE_NUMBER = process.env.WA_PHONE_NUMBER;
-    if (PHONE_NUMBER) {
-      console.log('\n📱 Attempting pairing code authentication for:', PHONE_NUMBER);
-      try {
-        const code = await sock.requestPairingCode(PHONE_NUMBER.replace(/\D/g, ''));
-        console.log('\n🔐 ============================================');
-        console.log('🔑 PAIRING CODE:', code);
-        console.log('   (8-digit code for WhatsApp pairing)');
-        console.log('🔐 ============================================\n');
-      } catch (err) {
-        console.log('\n❌ Pairing code failed:', err.message);
-        console.log('   Falling back to QR code mode...\n');
-      }
-    }
-
     sock.ev.on('connection.update', async (update) => {
       const { connection, lastDisconnect, qr } = update;
 
@@ -1190,37 +1177,37 @@ async function connectToWhatsApp() {
             color: { dark: '#000', light: '#fff' }
           });
           currentQrData = qrImageDataUrl;
-          console.log('\n📱 افتح هنا لمسح رمز QR: ' + (process.env.RENDER_EXTERNAL_URL || 'http://localhost:' + PORT) + '/qr\n');
+          console.log('\n📱 Open QR scanner at: ' + (process.env.RENDER_EXTERNAL_URL || 'http://localhost:' + PORT) + '/qr\n');
         } catch (e) {
-          console.log('\n❌ خطأ في إنشاء رمز QR:', e.message);
+          console.log('\n❌ QR generation error:', e.message);
         }
       }
 
       if (connection === 'open') {
-        console.log('\n✅ متصل بنجاح بـ WhatsApp!');
-        console.log('🤖 البوت جاهز لاستقبال الرسائل (7 لغات + مضادات حظر)...\n');
+        console.log('\n✅ Connected to WhatsApp!');
+        console.log('🤖 Bot ready (7 languages + anti-ban protection)...\n');
       }
 
       if (connection === 'close') {
         const statusCode = lastDisconnect?.error?.output?.statusCode;
         const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
-        console.log('\n❌ انقطع الاتصال:', lastDisconnect?.error?.message);
+        console.log('\n❌ Disconnected:', lastDisconnect?.error?.message);
 
         if (!shouldReconnect || (statusCode === DisconnectReason.badSession || statusCode === DisconnectReason.connectionFailure)) {
-          console.log('🗑️  حذف ملفات الجلسة التالفة (corrupted session)...');
+          console.log('🗑️  Cleaning corrupted session files...');
           try {
             rmSync(join(__dirname, 'auth_info'), { recursive: true, force: true });
-            console.log('✅ تم حذف مجلد auth_info بنجاح');
+            console.log('✅ auth_info cleared');
           } catch (cleanupErr) {
-            console.log('⚠️ فشل حذف auth_info:', cleanupErr.message);
+            console.log('⚠️ Cleanup error:', cleanupErr.message);
           }
         }
 
         if (shouldReconnect) {
-          console.log('🔄 محاولة إعادة الاتصال...\n');
+          console.log('🔄 Reconnecting...\n');
           setTimeout(connectToWhatsApp, 5000);
         } else {
-          console.log('🔐 تم تسجيل الخروج. تم حذف auth_info. يرج مسح QR مرة أخرى.');
+          console.log('🔐 Logged out. Deleting session. Scan QR again.');
         }
       }
     });
@@ -1237,8 +1224,8 @@ async function connectToWhatsApp() {
 
     return sock;
   } catch (err) {
-    console.error('\n💥 فشل إنشاء اتصال واتساب:', err.message);
-    console.log('🔄 محاولة إعادة التشغيل بعد 5 ثواني...\n');
+    console.error('\n💥 Connection error:', err.message);
+    console.log('🔄 Retrying in 5 seconds...\n');
     setTimeout(connectToWhatsApp, 5000);
   }
 }
