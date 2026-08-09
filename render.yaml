@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: sandpoint-whatsapp-bot
+    runtime: node
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: WA_PHONE_NUMBER
+        value: +966543120557
+    plan: free
+    autoDeploy: true
