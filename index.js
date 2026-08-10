@@ -121,6 +121,32 @@ async function sendHumanLikeMessage(sock, userId, message, options = {}) {
   await sock.sendMessage(userId, { text: message, ...options });
 }
 
+async function sendImageMessage(sock, userId, imagePath, caption = '') {
+  try {
+    await sock.sendPresenceUpdate('composing', userId);
+  } catch (e) {}
+  await humanDelay();
+  if (!existsSync(imagePath)) {
+    await sock.sendMessage(userId, { text: caption });
+    return;
+  }
+  const imageBuffer = readFileSync(imagePath);
+  await sock.sendMessage(userId, { image: imageBuffer, caption });
+}
+
+async function sendDocumentMessage(sock, userId, docPath, fileName, caption = '') {
+  try {
+    await sock.sendPresenceUpdate('composing', userId);
+  } catch (e) {}
+  await humanDelay();
+  if (!existsSync(docPath)) {
+    await sock.sendMessage(userId, { text: caption || '📎 تواصل مع الدعم للحصول على الملف' });
+    return;
+  }
+  const docBuffer = readFileSync(docPath);
+  await sock.sendMessage(userId, { document: docBuffer, fileName });
+}
+
 const LANG_MESSAGES = {
   ar: {
     greeting: `مرحباً بكم في شركة ساند بوينت للمقاولات (SAND POINT GLOBAL) - الدمام
@@ -134,7 +160,7 @@ const LANG_MESSAGES = {
 📝 اكتب رقم الخيار...
 0️⃣ للرجوع وتغيير اللغة / Go Back`,
     options: {
-      1: `عميل جديد - يسرنا كثير إننا نخدمك! عشان نعطيك الصافي والمميز، نحتاج:
+      1: `عميل جديد - نرحب بكم! عشان نقدم لكم خدمة احترافية، نحتاج:
 • نوع العقار (سكني، تجاري، صناعي، إلخ)
 • مساحة العقار بالمتر المربع
 • الحي / المنطقة في الدمام
@@ -246,7 +272,7 @@ Please choose the service you need:
 📝 Enter the option number...
 0️⃣ Go Back / تغيير اللغة`,
     options: {
-      1: `New Client - We're happy to serve you!
+      1: `New Client - We're happy to assist you!
 To provide you with the best possible service, we need:
 • Property type (residential, commercial, industrial, etc.)
 • Property area in square meters
@@ -1065,7 +1091,9 @@ async function handleMessage(sock, m) {
       const langCode = LANG_CODES[text];
       updateUserState(userId, { language: langCode, step: 'greeting', category: null });
       const tLang = LANG_MESSAGES[langCode];
-      await sendMsg(tLang.greeting);
+      // Send company logo with greeting
+      const LOGO_PATH = join(__dirname, 'assets', 'logo.jpg');
+      await sendImageMessage(sock, userId, LOGO_PATH, tLang.greeting);
       await sendListMessage(sock, userId, tLang.greeting, tLang.menuTitle, tLang.menuOptions);
     } else {
       await sendLanguageList(sock, userId);
@@ -1088,7 +1116,14 @@ async function handleMessage(sock, m) {
   // Main greeting menu
   if (userState.step === 'greeting') {
     if (['1', '2', '3', '4', '5'].includes(text)) {
-      if (text === '4' || text === '5') {
+      if (text === '4') {
+        // Send company profile PDF
+        const PDF_PATH = join(__dirname, 'assets', 'Sand Point  Profile .pdf');
+        await sendDocumentMessage(sock, userId, PDF_PATH, 'Sand Point Profile.pdf', t.options['4']);
+        await sendListMessage(sock, userId, t.greeting, t.menuTitle, t.menuOptions);
+        return;
+      }
+      if (text === '5') {
         await sendMsg(t.options[text]);
         await sendListMessage(sock, userId, t.greeting, t.menuTitle, t.menuOptions);
         return;
