@@ -1030,9 +1030,8 @@ async function handleMessage(sock, m) {
       delete usersData[userId];
       saveUsers();
     }
-    // Force-send main 7-language greeting message
-    await sendHumanLikeMessage(sock, userId, LANGUAGE_SELECTION);
-    await sendLanguageList(sock, userId);
+     // Force-send language selection list (contains greeting text)
+     await sendLanguageList(sock, userId);
     return;
   }
   // ===== END STRICT OVERRIDE =====
@@ -1091,10 +1090,10 @@ async function handleMessage(sock, m) {
       const langCode = LANG_CODES[text];
       updateUserState(userId, { language: langCode, step: 'greeting', category: null });
       const tLang = LANG_MESSAGES[langCode];
-      // Send company logo with greeting
+      // Send company logo with greeting, then the service menu
       const LOGO_PATH = join(__dirname, 'assets', 'logo.jpg');
       await sendImageMessage(sock, userId, LOGO_PATH, tLang.greeting);
-      await sendListMessage(sock, userId, tLang.greeting, tLang.menuTitle, tLang.menuOptions);
+      await sendListMessage(sock, userId, '', tLang.menuTitle, tLang.menuOptions);
     } else {
       await sendLanguageList(sock, userId);
     }
@@ -1107,9 +1106,8 @@ async function handleMessage(sock, m) {
   
   // Global "5" button always returns to main menu (unless already there)
   if (text === '5' && userState.step !== 'greeting' && userState.step !== 'language') {
-    await sendMsg(t.greeting);
-    await sendListMessage(sock, userId, t.greeting, t.menuTitle, t.menuOptions);
     updateUserState(userId, { step: 'greeting' });
+    await sendListMessage(sock, userId, t.greeting, t.menuTitle, t.menuOptions);
     return;
   }
   
@@ -1120,12 +1118,12 @@ async function handleMessage(sock, m) {
         // Send company profile PDF
         const PDF_PATH = join(__dirname, 'assets', 'Sand Point  Profile .pdf');
         await sendDocumentMessage(sock, userId, PDF_PATH, 'Sand Point Profile.pdf', t.options['4']);
-        await sendListMessage(sock, userId, t.greeting, t.menuTitle, t.menuOptions);
+        await sendListMessage(sock, userId, '', t.menuTitle, t.menuOptions);
         return;
       }
       if (text === '5') {
         await sendMsg(t.options[text]);
-        await sendListMessage(sock, userId, t.greeting, t.menuTitle, t.menuOptions);
+        await sendListMessage(sock, userId, '', t.menuTitle, t.menuOptions);
         return;
       }
       if (text === '3') {
@@ -1261,13 +1259,12 @@ async function handleMessage(sock, m) {
     return;
   }
   
-  // Complete state - stay dormant, do NOT auto-send menu
+   // Complete state - stay dormant, do NOT auto-send menu
   if (userState.step === 'complete') {
     // Bot stays dormant. Only reset on explicit trigger like "Hi" or "/start"
-    const greetings = ['hi', 'hello', 'مرحبا', 'اهلا', 'hello', 'hey', 'start', 'begin'];
+    const greetings = ['hi', 'hello', 'مرحبا', 'اهلا', 'hello', 'hey', 'start', 'begin', 'اهلاً', 'اهلا', 'assalam', 'السلام'];
     if (greetings.some(g => text.toLowerCase() === g)) {
       resetUserState(userId);
-      await sendMsg(LANGUAGE_SELECTION);
       await sendLanguageList(sock, userId);
     } else {
       await sendMsg(lang === 'ar' ? '👋 مرحباً مرة أخرى! اكتب 0 للبدء من جديد.' : '👋 Hello again! Type 0 to start over.');
@@ -1275,9 +1272,8 @@ async function handleMessage(sock, m) {
     return;
   }
   
-  // Fallback for unknown states
-  await sendMsg(LANGUAGE_SELECTION);
-  resetUserState(userId);
+   // Fallback for unknown states
+  await sendLanguageList(sock, userId);
 }
 
 let currentQrData = null;
@@ -1296,12 +1292,13 @@ async function connectToWhatsApp() {
       version,
       auth: state,
       printQRInTerminal: false,
-      browser: ['SAND POINT Bot', 'Safari', '1.0.0']
+      browser: ['SAND POINT Bot', 'Safari', '1.0.0'],
+      logger: undefined
     });
 
     if (!pairingAttempted) {
       pairingAttempted = true;
-      const PHONE_NUMBER = '+966543120557';
+      const PHONE_NUMBER = process.env.WA_PHONE_NUMBER || '+966543120557';
       console.log('\n📱 Requesting pairing code for:', PHONE_NUMBER);
       try {
         const code = await sock.requestPairingCode(PHONE_NUMBER.replace(/\D/g, ''));
@@ -1315,18 +1312,17 @@ async function connectToWhatsApp() {
       }
     }
 
-    sock.ev.on('connection.update', async (update) => {
+    sock.ev.on('connection.update', (update) => {
       const { connection, lastDisconnect, qr } = update;
 
       if (qr) {
         try {
-          const qrImageDataUrl = await QRCode.toDataURL(qr, {
-            width: 256,
-            margin: 2,
-            color: { dark: '#000', light: '#fff' }
-          });
-          currentQrData = qrImageDataUrl;
-          console.log('\n📱 Open QR scanner at: ' + (process.env.RENDER_EXTERNAL_URL || 'http://localhost:' + PORT) + '/qr\n');
+          QRCode.toDataURL(qr, { width: 256, margin: 2, color: { dark: '#000', light: '#fff' } })
+            .then(qrImageDataUrl => {
+              currentQrData = qrImageDataUrl;
+              console.log('\n📱 Open QR scanner at: ' + (process.env.RENDER_EXTERNAL_URL || 'http://localhost:' + (process.env.PORT || 3000)) + '/qr\n');
+            })
+            .catch(e => console.log('\n❌ QR generation error:', e.message));
         } catch (e) {
           console.log('\n❌ QR generation error:', e.message);
         }
@@ -1344,10 +1340,13 @@ async function connectToWhatsApp() {
         console.log('\n❌ Disconnected:', lastDisconnect?.error?.message);
 
         if (shouldReconnect) {
-          console.log('🔄 Reconnecting...\n');
+          console.log('🔄 Reconnecting in 5s...\n');
           setTimeout(connectToWhatsApp, 5000);
         } else {
-          console.log('🔐 Logged out. Please scan QR again.\n');
+          console.log('🔐 Logged out. Clearing session and retrying...\n');
+          try {
+            rmSync(join(__dirname, 'auth_info'), { recursive: true, force: true });
+          } catch (e) {}
           pairingAttempted = false;
           setTimeout(connectToWhatsApp, 5000);
         }
