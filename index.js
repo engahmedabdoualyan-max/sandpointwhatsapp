@@ -75,6 +75,7 @@ function getUserState(userId) {
       language: null,
       category: null,
       profession: null,
+      collect_step: 0,
       name: '',
       phone: '',
       specialty: '',
@@ -97,6 +98,7 @@ function resetUserState(userId) {
     language: null,
     category: null,
     profession: null,
+    collect_step: 0,
     name: '',
     phone: '',
     specialty: '',
@@ -160,8 +162,9 @@ const LANG_MESSAGES = {
 📝 اكتب رقم الخيار...
 0️⃣ للرجوع وتغيير اللغة / Go Back`,
     options: {
-      1: `عميل جديد - نرحب بكم! عشان نقدم لكم خدمة احترافية، نحتاج:
+      1: `عميل جديد - نرحب بكم! عشان نتعرف على مشروعك، نحتاج:
 • نوع العقار (سكني، تجاري، صناعي، إلخ)
+• نوع الأعمال (بناء، تشطيب، صيانة)
 • مساحة العقار بالمتر المربع
 • الحي / المنطقة في الدمام
 📝 ابدأ بـ **نوع العقار**...
@@ -196,7 +199,7 @@ const LANG_MESSAGES = {
 • الهيئة الملكية
 • وزارة التعليم
 
-📝 اكتب **5** للعودة للقائمة الرئيسية
+📝 اكتب **9** للعودة للقائمة الرئيسية
 0️⃣ للرجوع وتغيير اللغة / Go Back`,
       5: `📍 **بيانات التواصل - شركة ساند بوينت للمقاولات**:
 
@@ -209,7 +212,7 @@ const LANG_MESSAGES = {
 ⏰ ساعات العمل:
 السبت - الخميس: 7:30 ص - 3:30 م | الجمعة: مغلق
 
-📝 اكتب **5** للعودة للقائمة الرئيسية
+📝 اكتب **9** للعودة للقائمة الرئيسية
 0️⃣ للرجوع وتغيير اللغة / Go Back`,
     },
     prompts: {
@@ -219,6 +222,7 @@ const LANG_MESSAGES = {
       details: 'التفاصيل',
       profession: 'مهنتك',
       property_type: 'نوع العقار',
+      work_type: 'نوع الأعمال (بناء، تشطيب، صيانة)',
       area: 'مساحة العقار بالمتر المربع',
       district: 'الحي / المنطقة في الدمام',
       cv_files: 'ملف السيرة الذاتية (PDF)',
@@ -231,7 +235,7 @@ const LANG_MESSAGES = {
       engineer_prompt: '✅ عشان يتم فرز طلبك والتواصل مع القسم المناسب، يرجى إرفاق السيرة الذاتية (PDF) الآن. أو اكتب **تم** للمتابعة بدون ملف.\n0️⃣ للرجوع وتغيير اللغة / Go Back',
       worker_prompt: '✅ عشان نطلع على خبرتك ومهاراتك، يرجى إرفاق صور أو فيديوهات من أعمال سابقة. أو اكتب **تم** للمتابعة.\n0️⃣ للرجوع وتغيير اللغة / Go Back'
     },
-    summary: '✅ تم استلام طلبك بنجاح!\n📋 البيانات المسجلة:\n• الاسم: {name}\n• الجوال: {phone}\n• التفاصيل: {details}\n\n📞 هاتفنا: +966 543120557\n🕐 بنتواصل معاك خلال 24 ساعة إن شاء الله.\nشكراً لوثوقك بشركة ساند بوينت للمقاولات 🌟\n\n📝 اكتب **5** للعودة للقائمة الرئيسية\n0️⃣ للرجوع وتغيير اللغة / Go Back',
+    summary: '✅ تم استلام طلبك بنجاح!\n📋 البيانات المسجلة:\n• الاسم: {name}\n• الجوال: {phone}\n• التفاصيل: {details}\n\n📞 هاتفنا: +966 543120557\n🕐 بنتواصل معاك خلال 24 ساعة إن شاء الله.\nشكراً لوثوقك بشركة ساند بوينت للمقاولات 🌟\n\n📝 اكتب **9** للعودة للقائمة الرئيسية\n0️⃣ للرجوع وتغيير اللغة / Go Back',
     menuTitle: '📋 قائمة الخدمات - شركة ساند بوينت للمقاولات',
     menuOptions: [
       {
@@ -273,8 +277,9 @@ Please choose the service you need:
 0️⃣ Go Back / تغيير اللغة`,
     options: {
       1: `New Client - We're happy to assist you!
-To provide you with the best possible service, we need:
+To provide you with the best service, we need:
 • Property type (residential, commercial, industrial, etc.)
+• Type of Work (new construction, renovation, maintenance)
 • Property area in square meters
 • District/neighborhood in Dammam
 📝 Start with **property type**...
@@ -311,7 +316,7 @@ A leading Saudi company in contracting and infrastructure, headquartered in Damm
 • Royal Commission
 • Ministry of Education
 
-📝 Enter **5** for main menu
+📝 Enter **9** for main menu
 0️⃣ Go Back / تغيير اللغة`,
       5: `📍 **Contact Information - Sand Point Contracting**:
 
@@ -324,7 +329,7 @@ A leading Saudi company in contracting and infrastructure, headquartered in Damm
 ⏰ Working Hours:
 Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
 
-📝 Enter **5** for main menu
+📝 Enter **9** for main menu
 0️⃣ Go Back / تغيير اللغة`,
     },
     prompts: {
@@ -334,6 +339,7 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
       details: 'Details',
       profession: 'Your Profession',
       property_type: 'Property Type',
+      work_type: 'Type of Work (new construction, renovation, maintenance)',
       area: 'Property Area (sqm)',
       district: 'District/Neighborhood in Dammam',
       cv_files: 'CV File (PDF)',
@@ -346,7 +352,7 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
       engineer_prompt: '✅ Your application will be reviewed by our engineering department. Please attach your CV (PDF). Or type **done** to proceed without a file.\n0️⃣ Go Back / تغيير اللغة',
       worker_prompt: '✅ In order to assess your skills properly, please attach photos or videos of your previous work. Or type **done** to proceed without files.\n0️⃣ Go Back / تغيير اللغة'
     },
-    summary: '✅ Your request has been received successfully!\n📋 Registered details:\n• Name: {name}\n• Mobile: {phone}\n• Details: {details}\n\n📞 Our phone: +966 543120557\n🕐 We will contact you within 24 hours.\nThank you for trusting Sand Point Contracting 🌟\n\n📝 Enter **5** for main menu\n0️⃣ Go Back / تغيير اللغة',
+    summary: '✅ Your request has been received successfully!\n📋 Registered details:\n• Name: {name}\n• Mobile: {phone}\n• Details: {details}\n\n📞 Our phone: +966 543120557\n🕐 We will contact you within 24 hours.\nThank you for trusting Sand Point Contracting 🌟\n\n📝 Enter **9** for main menu\n0️⃣ Go Back / تغيير اللغة',
     menuTitle: '📋 Service Menu - Sand Point Contracting',
     menuOptions: [
       {
@@ -389,6 +395,7 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
       1: `نیو کلائنٹ - ہم آپ کی خدمت کرنا چاہتے ہیں!
 بہترین سروس کے لیے ہم ضرورت رکھتے ہیں:
 • پراپرٹی کی قسم (ریزیڈینشل، کامرشل، انڈسٹریشل، وغیرہ)
+• کام کی قسم (نیا ازائدہ، دوبارہ تعمیر، رکف صیانت)
 • پراپرٹی کریویچر مربع میٹر میں
 • ڈسٹرکٹ/پڑوس میں
 📝 **پراپرٹی کی قسم** لکھیں...`,
@@ -422,7 +429,7 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
 • راجی ہیکامیشن
 • تعلیم وزارت
 
-📝 مرکزی مینو کے لیے **5** لکھیں یا سیمیل رابطے کیلئے **0** لکھیں...`,
+📝 مرکزی مینو کے لیے **9** لکھیں یا سیمیل رابطے کیلئے **0** لکھیں...`,
       5: `📍 **رابطہ معلومات - سینڈ پوائنٹ گلوبل**:
 
 📍 پتہ: الخلیج - مشرقی علاقہ - سعودی عرب
@@ -435,7 +442,7 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
 اتوار - ہفتہ 7:30 صبح - 3:30 بجرے دوپہر
 ہفتہ - شنی وار: بند
 
-📝 مرکزی مینو کے لیے **5** لکھیں یا سیمیل رابطے کیلئے **0** لکچیں...`
+📝 مرکزی مینو کے لیے **9** لکھیں یا سیمیل رابطے کیلئے **0** لکچیں...`
     },
     prompts: {
       name: 'مکمل نام',
@@ -444,6 +451,7 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
       details: 'تفصیلات',
       profession: 'آپ کی پیشہ وری',
       property_type: 'پراپرٹی کی قسم',
+      work_type: 'کام کی قسم (تعمیر, ترمیم, رکف صیانت)',
       area: 'کشتی (سکوایر میٹر)',
       district: 'ڈسٹرکٹ/مقام قرآت میں',
       cv_files: 'سی وی فائل (PDF)',
@@ -456,7 +464,7 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
       engineer_prompt: '✅ آپ کی درخواست ہمارے انجینئری واحد کے لیے موصول ہوگئی۔ براہ کرم اپنا CV (PDF) ایٹیچ کریں۔ یا بغیر فائل کے آگے بڑھنے کے لئے **done** لکھیں۔',
       worker_prompt: '✅ آپ کی صلاحیت کے لئے براہ کرم اپنے پچھلے کام کی تصاویر یا ویڈیو ایڈیٹ کریں۔ یا بغیر فائل کے آگے بڑھنے کے لئے **done** لکھیں۔'
     },
-    summary: `✅ آپ کا درخواست برائے موصول!\n📋 درج شدہ تفصیلات:\n• نام: {name}\n• موبائل: {phone}\n• تفصیلات: {details}\n\n📞 ہمارا فون: +966 543120557\n🕐 ہم 24 گھنٹے کے اندر آپ سے رابطے کریں گے۔\nسینڈ پوائنٹ گلوبل پر بھروسے کے لئے شکریہ 🌟\n\n📝 مرکزی مینو کے لیے **5** لکھیں یا سیمیل رابطے کیلئے **0** لکچیں...`,
+    summary: `✅ آپ کا درخواست برائے موصول!\n📋 درج شدہ تفصیلات:\n• نام: {name}\n• موبائل: {phone}\n• تفصیلات: {details}\n\n📞 ہمارا فون: +966 543120557\n🕐 ہم 24 گھنٹے کے اندر آپ سے رابطے کریں گے۔\nسینڈ پوائنٹ گلوبل پر بھروسے کے لئے شکریہ 🌟\n\n📝 مرکزی مینو کے لیے **9** لکھیں یا سیمیل رابطے کیلئے **0** لکچیں...`,
     menuTitle: '📋 سروسز کی مینو - سینڈ پوائنٹ گلوبل',
     menuOptions: [
       {
@@ -532,7 +540,7 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
 • राजा आयोजना
 • शिक्षा मन्त्रालय
 
-📝 मुख्य मेनुमा फर्कन **5** लेख्नुहोस् वा सम्पर्क **0** लिख्नुहोस्...`,
+📝 मुख्य मेनुमा फर्कन **9** लेख्नुहोस् वा सम्पर्क **0** लिख्नुहोस्...`,
       5: `📍 **सम्पर्क जानकारी - स्यान्ड पोइंट ग्लोबल**:
 
 📍 ठेगाना: दम्मम - पूर्वी प्रांव - सउदी अरब
@@ -545,7 +553,7 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
 आइतवार - बिहीबार 7:30 बिही - 3:30 बिही
 शुक्र - शनि: बन्द
 
-📝 मुख्य मेनुमा फर्कन **5** लेख्नुहोस् वा सम्पर्क **0** लिख्नुहोस्...`
+📝 मुख्य मेनुमा फर्कन **9** लेख्नुहोस् वा सम्पर्क **0** लिख्नुहोस्...`
     },
     prompts: {
       name: 'पूरा नाम',
@@ -554,6 +562,7 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
       details: 'विवरण',
       profession: 'तपाईंको पेशा',
       property_type: 'सम्पत्ति को प्रकार',
+      work_type: 'कामको प्रकार (नयाँ निर्माण, ढाँचा, मर्मत सम्भार)',
       area: 'क्षेत्रफल (वर्ग मिटर)',
       district: 'डिस्ट्रिक्ट/पड्डोस दम्मममा',
       cv_files: 'सिभी फाइल (PDF)',
@@ -566,7 +575,7 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
       engineer_prompt: '✅ तपाईंको आवेदन हाम्रो इन्जिनियरिङ विभागमा पुग्नेछ। कृपया आफ्नो CV (PDF) संलग्न गर्नुहोस्। वा फाइल बिना अगाडि बढ्न **done** लेख्नुहोस्।',
       worker_prompt: '✅ तपाईंको क्षमता मूल्यांकन गर्न हामीलाई तपाईंको अघिल्लो कामका फोटो वा भिडियो चाहिए। वा फाइल बिना अगाडि बढ्न **done** लेख्नुहोस्।'
     },
-    summary: `✅ तपाईंको अनुरोध सफलतापूर्वक प्राप्त भयो!\n📋 दर्ता विवरण:\n• नाम: {name}\n• मोबाइल: {phone}\n• विवरण: {details}\n\n📞 हाम्रो फोन: +966 543120557\n🕐 हामीले 24 घण्टाभित्र तपाईंसँग सम्पर्क गर्नेछौं।\nस्यान्ड पोइंट ग्लोबलमा विश्वास गर्नुभएकोमा धन्यवाद 🌟\n\n📝 मुख्य मेनुमा फर्कन **5** लेख्नुहोस् वा सम्पर्क **0** लिख्नुहोस्...`,
+    summary: `✅ तपाईंको अनुरोध सफलतापूर्वक प्राप्त भयो!\n📋 दर्ता विवरण:\n• नाम: {name}\n• मोबाइल: {phone}\n• विवरण: {details}\n\n📞 हाम्रो फोन: +966 543120557\n🕐 हामीले 24 घण्टाभित्र तपाईंसँग सम्पर्क गर्नेछौं।\nस्यान्ड पोइंट ग्लोबलमा विश्वास गर्नुभएकोमा धन्यवाद 🌟\n\n📝 मुख्य मेनुमा फर्कन **9** लेख्नुहोस् वा सम्पर्क **0** लिख्नुहोस्...`,
     menuTitle: '📋 सेवा मेनु - स्यान्ड पोइंट ग्लोबल',
     menuOptions: [
       {
@@ -642,7 +651,7 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
 • রাজা কমিশন
 • মন্ত্রণালয় শিক্ষা
 
-📝 মূল মেনুতে ফিরতি **5** লিখুন বা সরাসরি যোগাযোগ **0** লিখুন...`,
+📝 মূল মেনুতে ফিরতি **9** লিখুন বা সরাসরি যোগাযোগ **0** লিখুন...`,
       5: `📍 **যোগাযোগের তথ্য - স্যান্ড পয়েন্ট গ্লোবাল**:
 
 📍 ঠিঠি: ঢাকা - পূর্বীয় প্রান্ত - সৌদি আরব
@@ -655,7 +664,7 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
 রববার - বৃহস্পতি 7:30 AM - 3:30 PM
 শুক্রবার - শনিবার: বন্দ
 
-📝 মূল মেনুতে ফিরতি **5** লিখুন বা সরাসরি যোগাযোগ **0** লিখুন...`
+📝 মূল মেনুতে ফিরতি **9** লিখুন বা সরাসরি যোগাযোগ **0** লিখুন...`
     },
     prompts: {
       name: 'পূর্ণ নাম',
@@ -664,6 +673,7 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
       details: 'বিবরণী',
       profession: 'আপনার পেশা',
       property_type: 'সম্পত্তির ধরন',
+      work_type: 'কাজের ধরন (নতুন নির্মাণ, রెனوভেশন, মেরামত)',
       area: 'ক্ষেত্রফল (বর্গ মিটার)',
       district: 'জেলা/পড়োস্বাস ঢাকামে',
       cv_files: 'সিভি ফাইল (PDF)',
@@ -676,7 +686,7 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
       engineer_prompt: '✅ আপনার আবেদনটি আমাদের ইঞ্জিনিয়ারিং বিভাগে পাঠানো হবে। অনুগ্রহ করে আপনার CV (PDF) সংযুক্ত করুন। অথবা ফাইল ছাড়া চালিয়ে জানতে **done** লিখুন।',
       worker_prompt: '✅ আপনার দক্ষতা মূল্যায়ন করতে অনুগ্রহ করে আপনার পূর্বের কাজের ছবি বা ভিডিও সংযুক্ত করুন। অথবা ফাইল ছাড়া চালিয়ে জানতে **done** লিখুন।'
     },
-    summary: `✅ আপনার অনুরোধটি সফলভাবে গৃহীত হয়েছে!\n📋 রেজিস্টার করা বিবরণী:\n• নাম: {name}\n• মোবাইল: {phone}\n• বিবরণী: {details}\n\n📞 আমাদের ফোন: +966 543120557\n🕐 আমরা 24 ঘণ্টার মধ্যে আপনার সাথে যুক্ত হব।\nস্যান্ড পয়েন্ট গ্লোবাল-এ আপনার বিশ্বাসের জন্য ধন্যবাদ 🌟\n\n📝 মূল মেনুতে ফিরতি **5** লিখুন বা সরাসরি যোগাযোগ **0** লিখুন...`,
+    summary: `✅ আপনার অনুরোধটি সফলভাবে গৃহীত হয়েছে!\n📋 রেজিস্টার করা বিবরণী:\n• নাম: {name}\n• মোবাইল: {phone}\n• বিবরণী: {details}\n\n📞 আমাদের ফোন: +966 543120557\n🕐 আমরা 24 ঘণ্টার মধ্যে আপনার সাথে যুক্ত হব।\nস্যান্ড পয়েন্ট গ্লোবাল-এ আপনার বিশ্বাসের জন্য ধন্যবাদ 🌟\n\n📝 মূল মেনুতে ফিরতি **9** লিখুন বা সরাসরি যোগাযোগ **0** লিখুন...`,
     menuTitle: '📋 সেবা মেনু - স্যান্ড পয়েন্ট গ্লোবাল',
     menuOptions: [
       {
@@ -752,7 +762,7 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
 • राजा योजना
 • शिक्षा मंत्रालय
 
-📝 मुख्य मेन्यू में वापसी हेतु **5** लिखें या संपर्क **0** लिखें...`,
+📝 मुख्य मेन्यू में वापसी हेतु **9** लिखें या संपर्क **0** लिखें...`,
       5: `📍 **संपर्क जानकारी - सैंड पॉइंट ग्लोबल**:
 
 📍 पता: दम्मम - पूर्वी प्रांट - सउदी अरब
@@ -765,7 +775,7 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
 रवि - गुरु 7:30 AM - 3:30 PM
 शुक्र - शनि: बंद
 
-📝 मुख्य मेन्यू में वापसी हेतु **5** लिखें या संपर्क **0** लिखें...`
+📝 मुख्य मेन्यू में वापसी हेतु **9** लिखें या संपर्क **0** लिखें...`
     },
     prompts: {
       name: 'पूरा नाम',
@@ -774,6 +784,7 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
       details: 'विवरण',
       profession: 'आपका पेशा',
       property_type: 'संपत्ति का प्रकार',
+      work_type: 'काम का प्रकार (नई निर्माण, ढाँचा, मरम्मत)',
       area: 'क्षेत्रफल (वर्ग मीटर)',
       district: 'डिस्ट्रिक्ट/पड़ोस दम्मम में',
       cv_files: 'सीवी फ़ाइल (PDF)',
@@ -786,7 +797,7 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
       engineer_prompt: '✅ आपका आवेदन हमारे इंजीनियरिंग विभाग के पास पहुंचेगा। कृपया अपना CV (PDF) संलग्न करें। या बिना फ़ाइल के आगे बढ़ने के लिए **done** लिखें।',
       worker_prompt: '✅ आपकी प्रतिभा का मूल्यांकन करने के लिए कृपया अपने पिछले काम की तस्वीरें या वीडियो संलग्न करें। या बिना फ़ाइल के आगे बढ़ने के लिए **done** लिखें।'
     },
-    summary: `✅ आपका अनुरोध सफलतापूर्वक प्राप्त हो गया!\n📋 दर्ज विवरण:\n• नाम: {name}\n• मोबाइल: {phone}\n• विवरण: {details}\n\n📞 हमारा फ़ोन: +966 543120557\n🕐 हम 24 घंटे के भीतर आपसे संपर्क करेंगे।\nसैंड पॉइंट ग्लोबल पर भरोसेमंद होने के लिए धन्यवाद 🌟\n\n📝 मुख्य मेन्यू में वापसी हेतु **5** लिखें या संपर्क **0** लिखें...`,
+    summary: `✅ आपका अनुरोध सफलतापूर्वक प्राप्त हो गया!\n📋 दर्ज विवरण:\n• नाम: {name}\n• मोबाइल: {phone}\n• विवरण: {details}\n\n📞 हमारा फ़ोन: +966 543120557\n🕐 हम 24 घंटे के भीतर आपसे संपर्क करेंगे।\nसैंड पॉइंट ग्लोबल पर भरोसेमंद होने के लिए धन्यवाद 🌟\n\n📝 मुख्य मेन्यू में वापसी हेतु **9** लिखें या संपर्क **0** लिखें...`,
     menuTitle: '📋 सेवा मेन्यू - सैंड पॉइंट ग्लोबल',
     menuOptions: [
       {
@@ -862,7 +873,7 @@ Isang naileading na Saudi kontratista sa Dammam, Eastern Province
 • Raja Komisyon
 • Kagawaran ng Edukasyon
 
-📝 I-to **5** para sa pangunahing menu o **0** para sa direkta makikipag-ugnayan...`,
+📝 I-to **9** para sa pangunahing menu o **0** para sa direkta makikipag-ugnayan...`,
       5: `📍 **Contact Information - Sand Point Global**:
 
 📍 Tugon: Dammam - Eastern Province - Saudi Arabia
@@ -875,7 +886,7 @@ Isang naileading na Saudi kontratista sa Dammam, Eastern Province
 Linggo - Huwebes 7:30 AM - 3:30 PM
 Biyernes - Sabado: Sarado
 
-📝 I-to **5** para sa pangunahing menu o **0** para sa direkta makikipag-ugnayan...`
+📝 I-to **9** para sa pangunahing menu o **0** para sa direkta makikipag-ugnayan...`
     },
     prompts: {
       name: 'Buong Pangalan',
@@ -884,6 +895,7 @@ Biyernes - Sabado: Sarado
       details: 'Detalye',
       profession: 'Iyong propesyon',
       property_type: 'Uri ng property',
+      work_type: 'Uri ng Trabaho (bagong gawa, rehabilitasyon, panuturis)',
       area: 'Sukat (square meters)',
       district: 'Distrito/Kapitbahay sa Dammam',
       cv_files: 'CV File (PDF)',
@@ -896,7 +908,7 @@ Biyernes - Sabado: Sarado
       engineer_prompt: '✅ Ang iyong application ay isusuri ng aming engineering departamento. Paki-attach ang iyong CV (PDF). O i-type **done** kung wala kang file.',
       worker_prompt: '✅ Upang masuri ang kompetensya mo, pakisamang mga litrato o video ng iyong nakaraang trabaho. O i-type **done** kung wala kang file.'
     },
-    summary: `✅ Natanggap ang iyong kahilingan!\n📋 Detalye:\n• Pangalan: {name}\n• Mobile: {phone}\n• Detalye: {details}\n\n📞 Telepono namin: +966 543120557\n🕐 Makikipag-ugnayan kami sa loob ng 24 na oras.\nSalamat sa tiwala sa Sand Point Global 🌟\n\n📝 I-to **5** para sa pangunahing menu o **0** para sa direkta makikipag-ugnayan...`,
+    summary: `✅ Natanggap ang iyong kahilingan!\n📋 Detalye:\n• Pangalan: {name}\n• Mobile: {phone}\n• Detalye: {details}\n\n📞 Telepono namin: +966 543120557\n🕐 Makikipag-ugnayan kami sa loob ng 24 na oras.\nSalamat sa tiwala sa Sand Point Global 🌟\n\n📝 I-to **9** para sa pangunahing menu o **0** para sa direkta makikipag-ugnayan...`,
     menuTitle: '📋 Serbisyong Menu - Sand Point Global',
     menuOptions: [
       {
@@ -1077,7 +1089,7 @@ async function handleMessage(sock, m) {
     const lang2 = userState.language || 'en';
     const t2 = LANG_MESSAGES[lang2];
     if (userState.step === 'collect_details' && ['1', '2', '3'].includes(userState.category)) {
-      await sendMsg(`✅ ${lang2 === 'ar' ? 'تم استلام ملفكم بنجاح' : 'File received successfully'}! ${attachmentInfo.fileName}\n\n${lang2 === 'ar' ? '📝 اكتبوا' : '📝 Type'} **done** ${lang2 === 'ar' ? 'للانهاء' : 'to finish'}...`);
+      await sendMsg(`✅ ${lang2 === 'ar' ? 'تم استلام ملفكم بنجاح' : 'File received successfully'}! ${attachmentInfo.fileName}\n\n${lang2 === 'ar' ? '📝 اكتبوا' : '📝 Type'} **${lang2 === 'ar' ? 'تم' : 'done'}** ${lang2 === 'ar' ? 'للإنهاء' : 'to finish'}...`);
       return;
     }
   }
@@ -1104,8 +1116,8 @@ async function handleMessage(sock, m) {
   const t = LANG_MESSAGES[lang];
   const backOption = lang === 'ar' ? '0️⃣ للرجوع وتغيير اللغة / Go Back' : '0️⃣ Go Back / تغيير اللغة';
   
-  // Global "5" button always returns to main menu (unless already there)
-  if (text === '5' && userState.step !== 'greeting' && userState.step !== 'language') {
+  // Global "9" button always returns to main menu (unless already there)
+  if (text === '9' && userState.step !== 'greeting' && userState.step !== 'language') {
     updateUserState(userId, { step: 'greeting' });
     await sendListMessage(sock, userId, t.greeting, t.menuTitle, t.menuOptions);
     return;
@@ -1132,8 +1144,8 @@ async function handleMessage(sock, m) {
         return;
       } else {
         updateUserState(userId, { step: 'collect_name', category: text });
+        await sendMsg(t.options[text]);
       }
-      await sendMsg(t.options[text]);
     } else {
       await sendListMessage(sock, userId, t.greeting, t.menuTitle, t.menuOptions);
     }
@@ -1182,10 +1194,11 @@ async function handleMessage(sock, m) {
       await sendMsg('❌ ' + t.prompts.invalid_phone + '\n\n' + backOption);
       return;
     }
-    updateUserState(userId, { phone: validatedPhone, step: 'collect_details' });
+    updateUserState(userId, { phone: validatedPhone, step: 'collect_details', collect_step: 0 });
     
-    if (userState.category === '1') {
-      await sendMsg(`✅ ${lang === 'ar' ? 'عشان نكمل الفلوس، نحتاج' : '✅ To proceed, we need'}:\n• ${t.prompts.property_type}\n• ${t.prompts.area}\n• ${t.prompts.district}\n📝 ${lang === 'ar' ? 'ابدأ بـ' : 'Start with'} **${t.prompts.property_type}**...\n\n${backOption}`);
+    
+     if (userState.category === '1') {
+      await sendMsg(`✅ ${lang === 'ar' ? 'لكم التسجيل!' : '✅ Registration complete!'} ${lang === 'ar' ? 'الآن' : 'Now'} **${t.prompts.property_type}** ${lang === 'ar' ? '(سكني، تجاري، صناعي...)' : '(residential, commercial, industrial...)' }: \n\n${backOption}`);
     } else if (userState.category === '2') {
       await sendMsg(`✅ ${lang === 'ar' ? 'عشان نرفع ملفك لقسم المشاريع،' : '✅ To register your profile,'} ${lang === 'ar' ? 'نحتاج' : 'we need'}:\n• ${t.prompts.company_profile}\n• ${t.prompts.specialty}\n📝 ${lang === 'ar' ? 'ابدأ بـ' : 'Start with'} **${t.prompts.specialty}** أو أرفق الملف الآن...\n\n${backOption}`);
     } else if (userState.category === '3') {
@@ -1201,7 +1214,7 @@ async function handleMessage(sock, m) {
   // Property details collection (New Client path)
   if (userState.step === 'collect_details') {
     if (userState.category === '1') {
-      if (text.toLowerCase() === 'done' || text.toLowerCase() === 'finish' || text === 'تم') {
+      if (text === 'تم' || text.toLowerCase() === 'done' || text.toLowerCase() === 'finish') {
         updateUserState(userId, { step: 'complete' });
         const summary = t.summary
           .replace('{name}', userState.name)
@@ -1213,18 +1226,21 @@ async function handleMessage(sock, m) {
         await sendMsg(thankYou);
         await sendMsg(summary);
         // Stay dormant - do NOT send menu
-      } else if (!userState.details) {
+      } else if (userState.collect_step === 0) {
         updateUserState(userId, { details: text, collect_step: 1 });
-        await sendMsg(`✅ ${lang === 'ar' ? 'تم التسجيل' : 'Recorded'}: ${text}\n\n${lang === 'ar' ? 'الآن' : 'Now'} **${t.prompts.area}**:\n\n${backOption}`);
+        await sendMsg(`✅ ${lang === 'ar' ? 'تم التسجيل' : 'Recorded'}: ${text}\n\n${lang === 'ar' ? 'الآن' : 'Now'} **${t.prompts.work_type}**:\n\n${backOption}`);
       } else if (userState.collect_step === 1) {
         updateUserState(userId, { details: userState.details + ' - ' + text, collect_step: 2 });
+        await sendMsg(`✅ ${lang === 'ar' ? 'تم التسجيل' : 'Recorded'}: ${text}\n\n${lang === 'ar' ? 'الآن' : 'Now'} **${t.prompts.area}**:\n\n${backOption}`);
+      } else if (userState.collect_step === 2) {
+        updateUserState(userId, { details: userState.details + ' - ' + text, collect_step: 3 });
         await sendMsg(`✅ ${lang === 'ar' ? 'تم التسجيل' : 'Recorded'}: ${text}\n\n${lang === 'ar' ? 'الآن' : 'Now'} **${t.prompts.district}** (${lang === 'ar' ? 'الحي / المنطقة' : 'neighborhood in Dammam'}):\n\n${backOption}`);
       } else {
         updateUserState(userId, { details: userState.details + ' - ' + text, collect_step: 0 });
-        await sendMsg(`✅ ${lang === 'ar' ? 'تم التسجيل' : 'Recorded'}: ${text}\n\n${lang === 'ar' ? '📝 اكتب' : '📝 Type'} **done** ${lang === 'ar' ? 'للانهاء' : 'to finish'}...\n\n${backOption}`);
+        await sendMsg(`✅ ${lang === 'ar' ? 'تم التسجيل' : 'Recorded'}: ${text}\n\n${lang === 'ar' ? '📝 اكتب' : '📝 Type'} **تم** ${lang === 'ar' ? 'للإنهاء' : 'to finish'}...\n\n${backOption}`);
       }
     } else if (userState.category === '2') {
-      if (text.toLowerCase() === 'done' || text.toLowerCase() === 'finish' || text === 'تم') {
+      if (text === 'تم' || text.toLowerCase() === 'done' || text.toLowerCase() === 'finish') {
         updateUserState(userId, { step: 'complete' });
         const summary = t.summary
           .replace('{name}', userState.name)
@@ -1240,7 +1256,7 @@ async function handleMessage(sock, m) {
         await sendMsg(`✅ ${t.prompts.specialty}: ${text}\n\n${lang === 'ar' ? '✅ عشان نرفع ملفك،' : '✅ To upload your file,'} ${lang === 'ar' ? 'أرفق الملف الآن' : 'attach it now'} ${lang === 'ar' ? 'أو اكتب **تم**' : 'or type **done**'}...\n\n${backOption}`);
       }
     } else if (userState.category === '3') {
-      if (text.toLowerCase() === 'done' || text.toLowerCase() === 'finish') {
+      if (text === 'تم' || text.toLowerCase() === 'done' || text.toLowerCase() === 'finish') {
         updateUserState(userId, { step: 'complete' });
         const summary = t.summary
           .replace('{name}', userState.name)
@@ -1253,7 +1269,7 @@ async function handleMessage(sock, m) {
         await sendMsg(summary);
       } else {
         updateUserState(userId, { details: text });
-        await sendMsg(`✅ ${lang === 'ar' ? 'تم التسجيل' : 'Recorded'}: ${text}\n\n${lang === 'ar' ? '📝 اكتب' : '📝 Type'} **done** ${lang === 'ar' ? 'للانهاء' : 'to finish'}...\n\n${backOption}`);
+        await sendMsg(`✅ ${lang === 'ar' ? 'تم التسجيل' : 'Recorded'}: ${text}\n\n${lang === 'ar' ? '📝 اكتب' : '📝 Type'} **${lang === 'ar' ? 'تم' : 'done'}** ${lang === 'ar' ? 'للإنهاء' : 'to finish'}...\n\n${backOption}`);
       }
     }
     return;
@@ -1278,6 +1294,29 @@ async function handleMessage(sock, m) {
 
 let currentQrData = null;
 
+// رموز إعادة الاتصال المتوقعة
+const DISCONNECT_CODES = {
+  BAD_SESSION: 401,
+  TOKEN_EXPIRED: 419,
+  MULTI_DEVICE_MISMATCH: 217,
+  RESTART_REQUIRED: 216,
+  FORBIDDEN: 403,
+};
+
+// دالة اختيار متصفح عشوائي
+function getRandomBrowser() {
+  const browsers = [
+    ['Chrome', '103.0.0.0', 'Linux'],
+    ['Safari', '16.0', 'macOS'],
+    ['Firefox', '107.0', 'Windows'],
+    ['Edge', '107.0.0.0', 'Windows'],
+    ['Opera', '93.0.0.0', 'Windows']
+  ];
+  return process.env.WA_BROWSER
+    ? process.env.WA_BROWSER.split(',')
+    : browsers[Math.floor(Math.random() * browsers.length)];
+}
+
 async function connectToWhatsApp() {
   try {
     console.log('\n🔄 Starting WhatsApp connection (QR mode)...');
@@ -1287,11 +1326,22 @@ async function connectToWhatsApp() {
     const { version, isLatest } = await fetchLatestBaileysVersion();
     console.log("Baileys version: " + version.join(".") + " - Latest: " + isLatest);
 
+    const browser = getRandomBrowser();
+
     const sock = makeWASocket({
       version,
       auth: state,
       printQRInTerminal: false,
-      browser: ['SAND POINT Bot', 'Safari', '1.0.0']
+      browser: ['SAND POINT Bot', browser[0], browser[1]],
+      defaultQueryTimeoutMs: 60000,
+      connectTimeoutMs: 60000,
+      qrTimeout: 60000,
+      patchMessageBeforeSending: (message) => {
+        if (message.listMessage) {
+          message.listMessage.footer = '';
+        }
+        return message;
+      }
     });
 
     sock.ev.on('connection.update', (update) => {
@@ -1311,25 +1361,42 @@ async function connectToWhatsApp() {
       }
 
       if (connection === 'open') {
-        console.log('\n✅ Connected to WhatsApp!');
+        console.log('\n✅ Connected to WhatsApp with browser: ' + browser[0]);
         console.log('🤖 Bot ready (7 languages + anti-ban protection)...\n');
         currentQrData = null;
       }
 
       if (connection === 'close') {
         const statusCode = lastDisconnect?.error?.output?.statusCode;
-        const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
-        console.log('\n❌ Disconnected:', lastDisconnect?.error?.message);
+        console.log('\n❌ Disconnected (code: ' + statusCode + '):', lastDisconnect?.error?.message);
 
-        if (shouldReconnect) {
-          console.log('🔄 Reconnecting in 10s to avoid rate limits...\n');
-          setTimeout(connectToWhatsApp, 10000);
-        } else {
-          console.log('🔐 Logged out. Clearing session and retrying...\n');
+        // Codes requiring session reset
+        const codesRequiringReset = [
+          DisconnectReason.loggedOut,
+          DISCONNECT_CODES.TOKEN_EXPIRED,
+          DISCONNECT_CODES.MULTI_DEVICE_MISMATCH,
+          DISCONNECT_CODES.RESTART_REQUIRED,
+          DISCONNECT_CODES.FORBIDDEN
+        ];
+
+        if (codesRequiringReset.includes(statusCode)) {
+          console.log('🗑️  Clearing session for code ' + statusCode + '...');
           try {
             rmSync(join(__dirname, 'auth_info'), { recursive: true, force: true });
-          } catch (e) {}
-          setTimeout(connectToWhatsApp, 15000);
+            console.log('✅ auth_info cleared');
+          } catch (cleanupErr) {
+            console.log('⚠️ Cleanup error:', cleanupErr.message);
+          }
+          setTimeout(() => {
+            console.log('🔄 Restarting with fresh session...\n');
+            connectToWhatsApp();
+          }, 15000);
+        } else {
+          // Transient errors - keep session and reconnect
+          console.log('🔄 Reconnecting in 8s (keeping session)...\n');
+          setTimeout(() => {
+            connectToWhatsApp();
+          }, 8000);
         }
       }
     });
@@ -1354,8 +1421,8 @@ async function connectToWhatsApp() {
     return sock;
   } catch (err) {
     console.error('\n💥 Connection error:', err.message);
-    console.log('🔄 Retrying in 5 seconds...\n');
-    setTimeout(connectToWhatsApp, 5000);
+    console.log('🔄 Retrying in 10 seconds...\n');
+    setTimeout(connectToWhatsApp, 10000);
   }
 }
 
