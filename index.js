@@ -87,43 +87,47 @@ function resetUserState(userId) {
 }
 
 async function humanDelay() {
-  const delay = Math.floor(Math.random() * 3000) + 2000;
+  const delay = Math.floor(Math.random() * 3000) + 3000;
   return new Promise(resolve => setTimeout(resolve, delay));
 }
 
-async function sendHumanLikeMessage(sock, userId, message) {
+async function sendHumanLikeMessage(sock, userId, message, options = {}) {
   try {
     await sock.sendPresenceUpdate('composing', userId);
   } catch (e) {}
   await humanDelay();
-  await sock.sendMessage(userId, { text: message });
+  await sock.sendMessage(userId, { text: message, ...options });
 }
 
 const LANG_MESSAGES = {
   ar: {
-    greeting: `مرحباً بكم في شركة ساند بوينت العالمية للمقاولات (SAND POINT GLOBAL) - الدمام
-نحن شركة مقاولات رائدة في المنطقة الشرقية، ونقدم خدماتنا بأعلى معايير الجودة لاهنت!
+    greeting: `مرحباً بكم في شركة ساند بوينت للمقاولات (SAND POINT GLOBAL) - الدمام
+نحن شركة مقاولات رائدة في المنطقة الشرقية، ونقدم خدماتنا بأعلى معايير الجودة.
 يرجى اختيار الخدمة المطلوبة من القائمة:
 1️⃣ عميل جديد - استفسار أو طلب عرض سعر
 2️⃣ مقاول/مورد - التعاون مع شركة ساند بوينت
 3️⃣ باحث عن عمل - الانضمام إلى فريقنا
 4️⃣ ملف الشركة - معرفة المزيد عنا
 5️⃣ بيانات التواصل - كيف تواصل معانا
-📝 اكتب رقم الخيار...`,
+📝 اكتب رقم الخيار...
+0️⃣ للرجوع وتغيير اللغة / Go Back`,
     options: {
       1: `عميل جديد - يسرنا كثير إننا نخدمك! عشان نعطيك الصافي والمميز، نحتاج:
 • نوع العقار (سكني، تجاري، صناعي، إلخ)
 • مساحة العقار بالمتر المربع
 • الحي / المنطقة في الدمام
-📝 ابدأ بـ **نوع العقار**...`,
+📝 ابدأ بـ **نوع العقار**...
+0️⃣ للرجوع وتغيير اللغة / Go Back`,
       2: `مقاول/مورد - نرحب بك في شبكة شركائنا! عشان نرفع ملفك لقسم المشاريع ونتعامل معك بجدية، نحتاج:
 • الملف التجاري (PDF أو صورة)
 • اسمك/اسم الشركة
 • مجال تخصصك (بناء، كهرباء، سباكة، تكييف، إلخ)
 • رقم الجوال
-📝 ابدأ بـ **اسمك/اسم الشركة**...`,
-      3: `باحث عن عمل - نقدر اهتمامك بفريقنا! الله يخليك. عشان نعرف موقعك تحديداً، قولنا: **ماهي مهنتك؟** (مهندس أم مهندسة، تقني، أم عامل؟)`,
-      4: `🏢 **ملف شركة ساند بوينت العالمية للمقاولات (SAND POINT GLOBAL)**:
+📝 ابدأ بـ **اسمك/اسم الشركة**...
+0️⃣ للرجوع وتغيير اللغة / Go Back`,
+      3: `باحث عن عمل - نقدر اهتمامك بفريقنا! حياك الله. عشان نعرف موقعك تحديداً، قولنا: **ماهي مهنتك؟** (مهندس أم مهندسة، تقني، أم عامل؟)
+0️⃣ للرجوع وتغيير اللغة / Go Back`,
+      4: `🏢 **ملف شركة ساند بوينت للمقاولات (SAND POINT GLOBAL)**:
 شركة سعودية رائدة في قطاع المقاولات والبنية التحتية، مقرها في الدمام - المنطقة الشرقية.
 
 🏗️ **مجالات عملنا**:
@@ -136,7 +140,7 @@ const LANG_MESSAGES = {
 📜 **التصنيفات**:
 • تصنيف وزارة الشؤون البلدية والقروية
 • شهادة الأيزو 9001، 14001، 45001
-• عضوية غرفة الغرف السعودية
+• عضوية الغرف السعودية
 
 🏆 **مشاريعنا**:
 • أمانة المنطقة الشرقية
@@ -144,8 +148,9 @@ const LANG_MESSAGES = {
 • الهيئة الملكية
 • وزارة التعليم
 
-📝 اكتب **5** للعودة للقائمة الرئيسية أو **0** للتواصل مباشرة...`,
-      5: `📍 **بيانات التواصل - ساند بوينت العالمية**:
+📝 اكتب **5** للعودة للقائمة الرئيسية
+0️⃣ للرجوع وتغيير اللغة / Go Back`,
+      5: `📍 **بيانات التواصل - شركة ساند بوينت للمقاولات**:
 
 📍 العنوان: الدمام - المنطقة الشرقية - المملكة العربية السعودية
 📞 الهاتف: +966 543120557
@@ -154,10 +159,10 @@ const LANG_MESSAGES = {
 🌐 الموقع الإلكتروني: www.sandpointglobal.com
 
 ⏰ ساعات العمل:
-الأحد - الخميس: 7:30 ص - 3:30 م
-الجمعة - السبت: مغلق
+السبت - الخميس: 7:30 ص - 3:30 م | الجمعة: مغلق
 
-📝 اكتب **5** للعودة للقائمة الرئيسية أو **0** للتواصل مباشرة...`
+📝 اكتب **5** للعودة للقائمة الرئيسية
+0️⃣ للرجوع وتغيير اللغة / Go Back`,
     },
     prompts: {
       name: 'الاسم الكامل',
@@ -171,15 +176,15 @@ const LANG_MESSAGES = {
       cv_files: 'ملف السيرة الذاتية (PDF)',
       work_files: 'صور أو فيديوهات من أعمال سابقة',
       company_profile: 'الملف التجاري (PDF أو صورة)',
-      invalid_phone: '❌ رقم الجوال غير صحيح ياختي. الحين اكتب رقم سعويد صحيح مثل: 05XXXXXXXX أو +9665XXXXXXXX:',
+      invalid_phone: '❌ رقم الجوال غير صحيح. الحين اكتب رقم سعودي صحيح مثل: 05XXXXXXXX أو +9665XXXXXXXX:',
       invalid_name: '❌ الاسم قصير جداً. الحين اكتب اسمك الكامل:',
       invalid_profession: '❌ يرجى تحديد مهنتك بدقة: مهندس، تقني، أم عامل؟',
-      thank_you: 'الله يخليك! تواصلك مع فريقنا تم استلامه. بنراجع طلبك ونتواصل معاك قريب. 🌟',
-      engineer_prompt: '✅ عشان يتم فرز طلبك والتواصل مع القسم المناسب، يرجى إرفاق السيرة الذاتية (PDF) الآن. أو اكتب **تم** للمتابعة بدون ملف.',
-      worker_prompt: '✅ عشان نطلع على خبرتك ومهاراتك، يرجى إرفاق صور أو فيديوهات من أعمال سابقة. أو اكتب **تم** للمتابعة.'
+      thank_you: 'حياك الله! تواصلك مع فريقنا تم استلامه. بنراجع طلبك ونتواصل معاك قريب. 🌟',
+      engineer_prompt: '✅ عشان يتم فرز طلبك والتواصل مع القسم المناسب، يرجى إرفاق السيرة الذاتية (PDF) الآن. أو اكتب **تم** للمتابعة بدون ملف.\n0️⃣ للرجوع وتغيير اللغة / Go Back',
+      worker_prompt: '✅ عشان نطلع على خبرتك ومهاراتك، يرجى إرفاق صور أو فيديوهات من أعمال سابقة. أو اكتب **تم** للمتابعة.\n0️⃣ للرجوع وتغيير اللغة / Go Back'
     },
-    summary: '✅ تم استلام طلبك بنجاح!\\n📋 البيانات المسجلة:\\n• الاسم: {name}\\n• الجوال: {phone}\\n• التفاصيل: {details}\\n\\n📞 هاتفنا: +966 543120557\\n🕐 بنتواصل معاك خلال 24 ساعة إن شاء الله.\\nشكراً لوثوقك بساند بوينت العالمية 🌟\\n\\n📝 اكتب **5** للعودة للقائمة الرئيسية أو **0** للتواصل مباشرة...',
-    menuTitle: '📋 قائمة الخدمات - ساند بوينت العالمية',
+    summary: '✅ تم استلام طلبك بنجاح!\n📋 البيانات المسجلة:\n• الاسم: {name}\n• الجوال: {phone}\n• التفاصيل: {details}\n\n📞 هاتفنا: +966 543120557\n🕐 بنتواصل معاك خلال 24 ساعة إن شاء الله.\nشكراً لوثوقك بشركة ساند بوينت للمقاولات 🌟\n\n📝 اكتب **5** للعودة للقائمة الرئيسية\n0️⃣ للرجوع وتغيير اللغة / Go Back',
+    menuTitle: '📋 قائمة الخدمات - شركة ساند بوينت للمقاولات',
     menuOptions: [
       {
         title: 'خدماتنا',
@@ -208,7 +213,7 @@ const LANG_MESSAGES = {
     ]
   },
   en: {
-    greeting: `Welcome to Sand Point Global Contracting (SAND POINT GLOBAL) - Dammam 🏗️
+    greeting: `Welcome to Sand Point Contracting (SAND POINT GLOBAL) - Dammam 🏗️
 We are a leading Saudi contracting company serving the Eastern Province with top-quality construction services!
 Please choose the service you need:
 1️⃣ New Client - Request a quote or inquiry
@@ -216,24 +221,28 @@ Please choose the service you need:
 3️⃣ Job Seeker - Join our team
 4️⃣ Company Profile - Learn more about us
 5️⃣ Contact Info - How to reach us
-📝 Enter the option number...`,
+📝 Enter the option number...
+0️⃣ Go Back / تغيير اللغة`,
     options: {
       1: `New Client - We're happy to serve you!
 To provide you with the best possible service, we need:
 • Property type (residential, commercial, industrial, etc.)
 • Property area in square meters
 • District/neighborhood in Dammam
-📝 Start with **property type**...`,
+📝 Start with **property type**...
+0️⃣ Go Back / تغيير اللغة`,
       2: `Subcontractor - Welcome to our partner network!
 To register your company profile and work with us properly:
 • Company profile (PDF or image)
 • Your/company name
 • Your specialization (Construction, Electrical, Plumbing, AC, etc.)
 • Mobile number
-📝 Start with **your/company name**...`,
+📝 Start with **your/company name**...
+0️⃣ Go Back / تغيير اللغة`,
       3: `Job Seeker - Thank you for your interest in joining us!
-To route your application correctly, please tell us: **What is your profession?** (Engineer, Technician, or Worker)?`,
-      4: `🏢 **Company Profile - Sand Point Global Contracting (SAND POINT GLOBAL)**:
+To route your application correctly, please tell us: **What is your profession?** (Engineer, Technician, or Worker)?
+0️⃣ Go Back / تغيير اللغة`,
+      4: `🏢 **Company Profile - Sand Point Contracting (SAND POINT GLOBAL)**:
 A leading Saudi company in contracting and infrastructure, headquartered in Dammam, Eastern Province.
 
 🏗️ **Our Sectors**:
@@ -254,8 +263,9 @@ A leading Saudi company in contracting and infrastructure, headquartered in Damm
 • Royal Commission
 • Ministry of Education
 
-📝 Enter **5** for main menu or **0** for direct contact...`,
-      5: `📍 **Contact Information - Sand Point Global**:
+📝 Enter **5** for main menu
+0️⃣ Go Back / تغيير اللغة`,
+      5: `📍 **Contact Information - Sand Point Contracting**:
 
 📍 Address: Dammam - Eastern Province - Saudi Arabia
 📞 Phone: +966 543120557
@@ -264,10 +274,10 @@ A leading Saudi company in contracting and infrastructure, headquartered in Damm
 🌐 Website: www.sandpointglobal.com
 
 ⏰ Working Hours:
-Sunday - Thursday: 7:30 AM - 3:30 PM
-Friday - Saturday: Closed
+Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
 
-📝 Enter **5** for main menu or **0** for direct contact...`
+📝 Enter **5** for main menu
+0️⃣ Go Back / تغيير اللغة`,
     },
     prompts: {
       name: 'Full Name',
@@ -285,11 +295,11 @@ Friday - Saturday: Closed
       invalid_name: '❌ Name too short. Please enter your full name:',
       invalid_profession: '❌ Please specify your profession: Engineer, Technician, or Worker?',
       thank_you: 'Thank you for reaching out to our team! We have received your message and will get back to you shortly. 🌟',
-      engineer_prompt: '✅ Your application will be reviewed by our engineering department. Please attach your CV (PDF). Or type **done** to proceed without a file.',
-      worker_prompt: '✅ In order to assess your skills properly, please attach photos or videos of your previous work. Or type **done** to proceed without files.'
+      engineer_prompt: '✅ Your application will be reviewed by our engineering department. Please attach your CV (PDF). Or type **done** to proceed without a file.\n0️⃣ Go Back / تغيير اللغة',
+      worker_prompt: '✅ In order to assess your skills properly, please attach photos or videos of your previous work. Or type **done** to proceed without files.\n0️⃣ Go Back / تغيير اللغة'
     },
-    summary: '✅ Your request has been received successfully!\n📋 Registered details:\n• Name: {name}\n• Mobile: {phone}\n• Details: {details}\n\n📞 Our phone: +966 543120557\n🕐 We will contact you within 24 hours.\nThank you for trusting Sand Point Global 🌟\n\n📝 Enter **5** for main menu or **0** for direct contact...',
-    menuTitle: '📋 Service Menu - Sand Point Global',
+    summary: '✅ Your request has been received successfully!\n📋 Registered details:\n• Name: {name}\n• Mobile: {phone}\n• Details: {details}\n\n📞 Our phone: +966 543120557\n🕐 We will contact you within 24 hours.\nThank you for trusting Sand Point Contracting 🌟\n\n📝 Enter **5** for main menu\n0️⃣ Go Back / تغيير اللغة',
+    menuTitle: '📋 Service Menu - Sand Point Contracting',
     menuOptions: [
       {
         title: 'Our Services',
@@ -1041,8 +1051,9 @@ async function handleMessage(sock, m) {
     if (['1', '2', '3', '4', '5', '6', '7'].includes(text)) {
       const langCode = LANG_CODES[text];
       updateUserState(userId, { language: langCode, step: 'greeting', category: null });
-      await sendMsg(LANG_MESSAGES[langCode].greeting);
       const tLang = LANG_MESSAGES[langCode];
+      // Send greeting text only (logo sending removed - file not deployed)
+      await sendMsg(tLang.greeting);
       await sendListMessage(sock, userId, tLang.greeting, tLang.menuTitle, tLang.menuOptions);
     } else {
       await sendLanguageList(sock, userId);
