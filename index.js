@@ -11,6 +11,10 @@ const __dirname = dirname(__filename);
 
 const USERS_FILE = join(__dirname, 'users.json');
 
+// Track recently processed message IDs to prevent duplicates
+const processedMessageIds = new Set();
+const MESSAGE_DEDUPE_TIMEOUT = 60000; // 1 minute
+
 // Sanitize Eastern Arabic numerals (١٢٣٤٥٦٧٨٩٠) to Western (1234567890)
 function sanitizeArabicNumerals(text) {
   const arabicMap = {
@@ -22,12 +26,28 @@ function sanitizeArabicNumerals(text) {
   return text.replace(/[٠-٩۰-۹]/g, char => arabicMap[char] || char);
 }
 
-// Global back command check: "0", "back", "تعديل", "رجوع"
+// Validate Saudi phone number: exactly 10 digits starting with 05, or international format
+function validateSaudiPhone(phone) {
+  const cleaned = sanitizeArabicNumerals(phone.replace(/[\s-]/g, ''));
+  if (/^05[0-9]{8}$/.test(cleaned)) return cleaned;
+  if (/^\+9665[0-9]{8}$/.test(cleaned)) return cleaned;
+  if (/^9665[0-9]{8}$/.test(cleaned)) return '+' + cleaned;
+  return null;
+}
+
+// Check if message ID was already processed recently
+function isDuplicate(id) {
+  if (processedMessageIds.has(id)) return true;
+  processedMessageIds.add(id);
+  setTimeout(() => processedMessageIds.delete(id), MESSAGE_DEDUPE_TIMEOUT);
+  return false;
+}
+
+// Global back command check (broader match)
 function isBackCommand(text, lang) {
   const sanitized = sanitizeArabicNumerals(text.toLowerCase().trim());
-  const backKeywords = ['0', 'back', 'تعديل', 'رجوع', 'الغاء', 'cancel'];
-  if (lang === 'ar') backKeywords.push('عودة');
-  return backKeywords.some(k => sanitized === k || sanitized.includes(k));
+  const backKeywords = ['back', 'تعديل', 'رجوع', 'الغاء', 'cancel', 'عودة'];
+  return backKeywords.some(k => sanitized === k);
 }
 
 let usersData = {};
@@ -87,9 +107,11 @@ function resetUserState(userId) {
 }
 
 async function humanDelay() {
-  const delay = Math.floor(Math.random() * 3000) + 3000;
+  const delay = Math.floor(Math.random() * 2000) + 3000;
   return new Promise(resolve => setTimeout(resolve, delay));
 }
+
+// Track message IDs for de-duplication in the listener
 
 async function sendHumanLikeMessage(sock, userId, message, options = {}) {
   try {
@@ -889,7 +911,7 @@ const LANG_CODES = {
   '7': 'tl'
 };
 
-const LANGUAGE_SELECTION = `Welcome to Sand Point Global Contracting 🏗️
+const LANGUAGE_SELECTION = `Welcome to Sand Point Contracting 🏗️
 الرجاء اختيار لغة التواصل / Please choose your language:
 1. العربية 🇸🇦
 2. English 🇬🇧
@@ -907,7 +929,7 @@ async function sendListMessage(sock, userId, text, title, sections) {
   
   const listMessage = {
     text,
-    footer: 'Sand Point Global - اختر من القائمة أدناه / Choose from the list below',
+    footer: 'شركة ساند بوينت للمقاولات - اختر من القائمة أدناه / Choose from the list below\n0️⃣ للرجوع / Go Back',
     title,
     buttonText: 'عرض القائمة / View List',
     sections
@@ -924,8 +946,8 @@ async function sendLanguageList(sock, userId) {
   
   const sections = LANG_MESSAGES.ar.languageList;
   const listMessage = {
-    text: LANGUAGE_SELECTION,
-    footer: 'Sand Point Global - اختر لغتك / Choose your language',
+    text: LANGUAGE_SELECTION + '\n\n0️⃣ للرجوع وتغيير اللغة / Go Back',
+    footer: 'شركة ساند بوينت للمقاولات - اختر لغتك / Choose your language',
     title: '🌍 اختر اللغة / Choose Language',
     buttonText: 'اختر اللغة / Choose Language',
     sections
@@ -952,7 +974,7 @@ async function sendProfessionList(sock, userId, t, userState) {
   
   const listMessage = {
     text: t.options['3'],
-    footer: 'Sand Point Global - اختر مهنتك / Choose your profession',
+    footer: 'شركة ساند بوينت للمقاولات - اختر مهنتك / Choose your profession\n0️⃣ للرجوع وتغيير اللغة / Go Back',
     title: '💼 ' + (lang === 'ar' ? 'ماهي مهنتك؟' : 'What is your profession?'),
     buttonText: lang === 'ar' ? 'اختر المهنة' : 'Choose Profession',
     sections
@@ -991,14 +1013,6 @@ async function handleMessage(sock, m) {
   
   const userState = getUserState(userId);
   
-  // Global back command: reset to language selection from any step (covers "رجوع", "الغاء", etc.)
-  if (isBackCommand(text, userState.language || 'en')) {
-    await sendHumanLikeMessage(sock, userId, LANG_MESSAGES[userState.language || 'en'].prompts.thank_you);
-    resetUserState(userId);
-    await sendLanguageList(sock, userId);
-    return;
-  }
-  
   let hasAttachment = false;
   let attachmentInfo = {};
   
@@ -1028,8 +1042,6 @@ async function handleMessage(sock, m) {
     saveAttachment(userId, attachmentInfo);
   }
   
-  // Remove old "0" handling since it's now in isBackCommand
-  
   if (text === '/start' || text === 'restart' || text.toLowerCase() === 'cancel') {
     resetUserState(userId);
     await sendLanguageList(sock, userId);
@@ -1047,12 +1059,12 @@ async function handleMessage(sock, m) {
   
   if (!text && !hasAttachment) return;
   
+  // Language selection step
   if (userState.step === 'language') {
     if (['1', '2', '3', '4', '5', '6', '7'].includes(text)) {
       const langCode = LANG_CODES[text];
       updateUserState(userId, { language: langCode, step: 'greeting', category: null });
       const tLang = LANG_MESSAGES[langCode];
-      // Send greeting text only (logo sending removed - file not deployed)
       await sendMsg(tLang.greeting);
       await sendListMessage(sock, userId, tLang.greeting, tLang.menuTitle, tLang.menuOptions);
     } else {
@@ -1063,14 +1075,17 @@ async function handleMessage(sock, m) {
   
   const lang = userState.language || 'en';
   const t = LANG_MESSAGES[lang];
+  const backOption = lang === 'ar' ? '0️⃣ للرجوع وتغيير اللغة / Go Back' : '0️⃣ Go Back / تغيير اللغة';
   
-  if (text === '5' && userState.step !== 'greeting') {
+  // Global "5" button always returns to main menu (unless already there)
+  if (text === '5' && userState.step !== 'greeting' && userState.step !== 'language') {
     await sendMsg(t.greeting);
     await sendListMessage(sock, userId, t.greeting, t.menuTitle, t.menuOptions);
     updateUserState(userId, { step: 'greeting' });
     return;
   }
   
+  // Main greeting menu
   if (userState.step === 'greeting') {
     if (['1', '2', '3', '4', '5'].includes(text)) {
       if (text === '4' || text === '5') {
@@ -1092,62 +1107,65 @@ async function handleMessage(sock, m) {
     return;
   }
   
+  // Profession selection (Job Seeker path)
   if (userState.step === 'collect_profession') {
     const lowerText = text.toLowerCase();
     let profession = null;
     
-    // Check for list message responses (row titles)
     if (lowerText.includes('engineer') || lowerText.includes('مهندس') || lowerText.includes('इन्जिनियर') || lowerText.includes('ইঞ্জিনিয়ার')) {
       profession = 'engineer';
     } else if (lowerText.includes('technician') || lowerText.includes('تقني') || lowerText.includes('टेक्निशियन') || lowerText.includes('টেকনিসিয়ান')) {
       profession = 'technician';
-    } else if (lowerText.includes('worker') || lowerText.includes('عامل') || lowerText.includes('مزدور') || lowerText.includes('मजदुर') || lowerText.includes('মজুর') || lowerText.includes('trabaho') || lowerText.includes('manggagawa')) {
+    } else if (lowerText.includes('worker') || lowerText.includes('عامل') || lowerText.includes('मजदुर') || lowerText.includes('মজুর') || lowerText.includes('trabaho') || lowerText.includes('manggagawa')) {
       profession = 'worker';
     }
     
     if (profession) {
       updateUserState(userId, { profession: profession, step: 'collect_name' });
-      await sendMsg(`✅ ${t.prompts.thank_you}\n${lang === 'ar' ? 'الآن نحتاج' : lang === 'en' ? 'Now we need' : lang === 'tl' ? 'Ngayon kailangan namin' : 'अब हम चाहिए'}\n• ${t.prompts.name}\n• ${t.prompts.phone}\n📝 ${lang === 'ar' ? 'ابدأ بـ' : 'Start with'} **${t.prompts.name}**...`);
+      await sendMsg(`✅ ${t.prompts.thank_you}\n${lang === 'ar' ? 'الآن نحتاج' : 'Now we need'}\n• ${t.prompts.name}\n• ${t.prompts.phone}\n📝 ${lang === 'ar' ? 'ابدأ بـ' : 'Start with'} **${t.prompts.name}**...\n\n${backOption}`);
     } else {
       const professionOptions = lang === 'ar' ? '(مهندس، تقني، أم عامل)' : '(Engineer, Technician, or Worker)';
-      await sendMsg('❌ ' + t.prompts.invalid_profession + ' ' + professionOptions + '...');
+      await sendMsg('❌ ' + t.prompts.invalid_profession + ' ' + professionOptions + '...\n\n' + backOption);
     }
     return;
   }
   
+  // Name collection
   if (userState.step === 'collect_name') {
     if (text.length < 2) {
-      await sendMsg('❌ ' + t.prompts.invalid_name);
+      await sendMsg('❌ ' + t.prompts.invalid_name + '\n\n' + backOption);
       return;
     }
     updateUserState(userId, { name: text, step: 'collect_phone' });
-    await sendMsg(`[${t.prompts.thank_you}] ${lang === 'ar' ? 'الآن' : 'Now'} **${t.prompts.phone}** (${lang === 'ar' ? 'مثال: 05XXXXXXXX' : 'e.g., 05XXXXXXXX'}):`);
+    await sendMsg(`[${t.prompts.thank_you}] ${lang === 'ar' ? 'الآن' : 'Now'} **${t.prompts.phone}** (${lang === 'ar' ? 'مثال: 05XXXXXXXX' : 'e.g., 05XXXXXXXX'}):\n\n${backOption}`);
     return;
   }
   
+  // Phone validation
   if (userState.step === 'collect_phone') {
-    const phoneRegex = /^(05|\+9665|9665)[0-9]{8}$/;
     const cleanPhone = text.replace(/[\s-]/g, '');
-    if (!phoneRegex.test(cleanPhone)) {
-      await sendMsg('❌ ' + t.prompts.invalid_phone);
+    const validatedPhone = validateSaudiPhone(cleanPhone);
+    if (!validatedPhone) {
+      await sendMsg('❌ ' + t.prompts.invalid_phone + '\n\n' + backOption);
       return;
     }
-    updateUserState(userId, { phone: cleanPhone, step: 'collect_details' });
+    updateUserState(userId, { phone: validatedPhone, step: 'collect_details' });
     
     if (userState.category === '1') {
-      await sendMsg(`✅ ${lang === 'ar' ? 'عشان نكمل الفلوس، نحتاج' : '✅ To proceed, we need'}:\n• ${t.prompts.property_type}\n• ${t.prompts.area}\n• ${t.prompts.district}\n📝 ${lang === 'ar' ? 'ابدأ بـ' : 'Start with'} **${t.prompts.property_type}**...`);
+      await sendMsg(`✅ ${lang === 'ar' ? 'عشان نكمل الفلوس، نحتاج' : '✅ To proceed, we need'}:\n• ${t.prompts.property_type}\n• ${t.prompts.area}\n• ${t.prompts.district}\n📝 ${lang === 'ar' ? 'ابدأ بـ' : 'Start with'} **${t.prompts.property_type}**...\n\n${backOption}`);
     } else if (userState.category === '2') {
-      await sendMsg(`✅ ${lang === 'ar' ? 'عشان نرفع ملفك لقسم المشاريع،' : '✅ To register your profile,'} ${lang === 'ar' ? 'نحتاج' : 'we need'}:\n• ${t.prompts.company_profile}\n• ${t.prompts.specialty}\n📝 ${lang === 'ar' ? 'ابدأ بـ' : 'Start with'} **${t.prompts.specialty}** أو أرفق الملف الآن...`);
+      await sendMsg(`✅ ${lang === 'ar' ? 'عشان نرفع ملفك لقسم المشاريع،' : '✅ To register your profile,'} ${lang === 'ar' ? 'نحتاج' : 'we need'}:\n• ${t.prompts.company_profile}\n• ${t.prompts.specialty}\n📝 ${lang === 'ar' ? 'ابدأ بـ' : 'Start with'} **${t.prompts.specialty}** أو أرفق الملف الآن...\n\n${backOption}`);
     } else if (userState.category === '3') {
       if (userState.profession === 'engineer' || userState.profession === 'technician') {
-        await sendMsg(`✅ ${t.prompts.engineer_prompt}`);
+        await sendMsg(`✅ ${t.prompts.engineer_prompt}\n\n${backOption}`);
       } else {
-        await sendMsg(`✅ ${t.prompts.worker_prompt}`);
+        await sendMsg(`✅ ${t.prompts.worker_prompt}\n\n${backOption}`);
       }
     }
     return;
   }
   
+  // Property details collection (New Client path)
   if (userState.step === 'collect_details') {
     if (userState.category === '1') {
       if (text.toLowerCase() === 'done' || text.toLowerCase() === 'finish' || text === 'تم') {
@@ -1156,10 +1174,21 @@ async function handleMessage(sock, m) {
           .replace('{name}', userState.name)
           .replace('{phone}', userState.phone)
           .replace('{details}', userState.details || text);
+        const thankYou = lang === 'ar' 
+          ? `🙏 ${t.prompts.thank_you}\n\n${backOption}`
+          : `${t.prompts.thank_you}\n\n${backOption}`;
+        await sendMsg(thankYou);
         await sendMsg(summary);
+        // Stay dormant - do NOT send menu
+      } else if (!userState.details) {
+        updateUserState(userId, { details: text, collect_step: 1 });
+        await sendMsg(`✅ ${lang === 'ar' ? 'تم التسجيل' : 'Recorded'}: ${text}\n\n${lang === 'ar' ? 'الآن' : 'Now'} **${t.prompts.area}**:\n\n${backOption}`);
+      } else if (userState.collect_step === 1) {
+        updateUserState(userId, { details: userState.details + ' - ' + text, collect_step: 2 });
+        await sendMsg(`✅ ${lang === 'ar' ? 'تم التسجيل' : 'Recorded'}: ${text}\n\n${lang === 'ar' ? 'الآن' : 'Now'} **${t.prompts.district}** (${lang === 'ar' ? 'الحي / المنطقة' : 'neighborhood in Dammam'}):\n\n${backOption}`);
       } else {
-        updateUserState(userId, { details: text });
-        await sendMsg(`✅ ${lang === 'ar' ? 'تم التسجيل' : 'Recorded'}: ${text}\n\n${lang === 'ar' ? '📝 اكتب' : '📝 Type'} **done** ${lang === 'ar' ? 'للانهاء' : 'to finish'}...`);
+        updateUserState(userId, { details: userState.details + ' - ' + text, collect_step: 0 });
+        await sendMsg(`✅ ${lang === 'ar' ? 'تم التسجيل' : 'Recorded'}: ${text}\n\n${lang === 'ar' ? '📝 اكتب' : '📝 Type'} **done** ${lang === 'ar' ? 'للانهاء' : 'to finish'}...\n\n${backOption}`);
       }
     } else if (userState.category === '2') {
       if (text.toLowerCase() === 'done' || text.toLowerCase() === 'finish' || text === 'تم') {
@@ -1168,10 +1197,14 @@ async function handleMessage(sock, m) {
           .replace('{name}', userState.name)
           .replace('{phone}', userState.phone)
           .replace('{details}', userState.specialty);
+        const thankYou = lang === 'ar'
+          ? `🙏 ${t.prompts.thank_you}\n\n${backOption}`
+          : `${t.prompts.thank_you}\n\n${backOption}`;
+        await sendMsg(thankYou);
         await sendMsg(summary);
       } else {
         updateUserState(userId, { specialty: text });
-        await sendMsg(`✅ ${t.prompts.specialty}: ${text}\n\n${lang === 'ar' ? '✅ عشان نرفع ملفك،' : '✅ To upload your file,'} ${lang === 'ar' ? 'أرفق الملف الآن' : 'attach it now'} ${lang === 'ar' ? 'أو اكتب **تم**' : 'or type **done**'}...`);
+        await sendMsg(`✅ ${t.prompts.specialty}: ${text}\n\n${lang === 'ar' ? '✅ عشان نرفع ملفك،' : '✅ To upload your file,'} ${lang === 'ar' ? 'أرفق الملف الآن' : 'attach it now'} ${lang === 'ar' ? 'أو اكتب **تم**' : 'or type **done**'}...\n\n${backOption}`);
       }
     } else if (userState.category === '3') {
       if (text.toLowerCase() === 'done' || text.toLowerCase() === 'finish') {
@@ -1180,21 +1213,34 @@ async function handleMessage(sock, m) {
           .replace('{name}', userState.name)
           .replace('{phone}', userState.phone)
           .replace('{details}', userState.profession);
+        const thankYou = lang === 'ar'
+          ? `🙏 ${t.prompts.thank_you}\n\n${backOption}`
+          : `${t.prompts.thank_you}\n\n${backOption}`;
+        await sendMsg(thankYou);
         await sendMsg(summary);
       } else {
         updateUserState(userId, { details: text });
-        await sendMsg(`✅ ${lang === 'ar' ? 'تم التسجيل' : 'Recorded'}: ${text}\n\n${lang === 'ar' ? '📝 اكتب' : '📝 Type'} **done** ${lang === 'ar' ? 'للانهاء' : 'to finish'}...`);
+        await sendMsg(`✅ ${lang === 'ar' ? 'تم التسجيل' : 'Recorded'}: ${text}\n\n${lang === 'ar' ? '📝 اكتب' : '📝 Type'} **done** ${lang === 'ar' ? 'للانهاء' : 'to finish'}...\n\n${backOption}`);
       }
     }
     return;
   }
   
+  // Complete state - stay dormant, do NOT auto-send menu
   if (userState.step === 'complete') {
-    await sendMsg(LANGUAGE_SELECTION);
-    resetUserState(userId);
+    // Bot stays dormant. Only reset on explicit trigger like "Hi" or "/start"
+    const greetings = ['hi', 'hello', 'مرحبا', 'اهلا', 'hello', 'hey', 'start', 'begin'];
+    if (greetings.some(g => text.toLowerCase() === g)) {
+      resetUserState(userId);
+      await sendMsg(LANGUAGE_SELECTION);
+      await sendLanguageList(sock, userId);
+    } else {
+      await sendMsg(lang === 'ar' ? '👋 مرحباً مرة أخرى! اكتب 0 للبدء من جديد.' : '👋 Hello again! Type 0 to start over.');
+    }
     return;
   }
   
+  // Fallback for unknown states
   await sendMsg(LANGUAGE_SELECTION);
   resetUserState(userId);
 }
@@ -1276,11 +1322,15 @@ async function connectToWhatsApp() {
     sock.ev.on('creds.update', saveCreds);
 
     sock.ev.on('messages.upsert', async ({ messages, type }) => {
-      // Only process notify messages (user messages), ignore status updates and duplicates
+      // Only process notify messages (user messages), ignore status updates
       if (type !== 'notify') return;
       
       for (const m of messages) {
         if (!m.key.fromMe && m.message) {
+          // Strict de-duplication: trace message IDs to prevent double replies
+          const msgId = m.key.id;
+          if (!msgId || isDuplicate(msgId)) continue;
+          
           await handleMessage(sock, m);
         }
       }
@@ -1350,6 +1400,6 @@ function startServer() {
 }
 
 loadUsers();
-console.log('🚀 بدء تشغيل بوت ساند بوينت العالمية (7 لغات + مضادات حظر إنسانيات)...');
+console.log('🚀 بدء تشغيل بوت شركة ساند بوينت للمقاولات (7 لغات + مضادات حظر إنسانيات)...');
 startServer();
 connectToWhatsApp().catch(console.error);
