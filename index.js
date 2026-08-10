@@ -1292,8 +1292,7 @@ async function connectToWhatsApp() {
       version,
       auth: state,
       printQRInTerminal: false,
-      browser: ['SAND POINT Bot', 'Safari', '1.0.0'],
-      logger: undefined
+      browser: ['SAND POINT Bot', 'Safari', '1.0.0']
     });
 
     if (!pairingAttempted) {
