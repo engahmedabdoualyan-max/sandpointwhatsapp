@@ -949,13 +949,13 @@ const LANG_CODES = {
   '7': 'tl'
 };
 
-const LANGUAGE_SELECTION = `Welcome to Sand Point Contracting 🏗️
-الرجاء اختيار لغة التواصل / Please choose your language:
+const LANGUAGE_SELECTION = `🏗️ شركة ساند بوينت للمقاولات - الدمام
+🌍 Please choose your language / الرجاء اختيار لغة التواصل:
 1. العربية 🇸🇦
 2. English 🇬🇧
 3. اردو (Urdu) 🇵🇰
 4. नेपाली (Nepali) 🇳🇵
-5. বাংলা (Bengali) 🇧🇩
+5. বাংলા (Bengali) 🇧🇩
 6. हिंदी (Hindi) 🇮🇳
 7. Tagalog (Filipino) 🇵🇭`;
 
