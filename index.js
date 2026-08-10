@@ -1274,14 +1274,13 @@ async function handleMessage(sock, m) {
   
    // Fallback for unknown states
   await sendLanguageList(sock, userId);
-}
+ }
 
 let currentQrData = null;
-let pairingAttempted = false;
 
 async function connectToWhatsApp() {
   try {
-    console.log('\n🔄 Starting WhatsApp connection...');
+    console.log('\n🔄 Starting WhatsApp connection (QR mode)...');
 
     const { state, saveCreds } = await useMultiFileAuthState(join(__dirname, 'auth_info'));
 
@@ -1294,22 +1293,6 @@ async function connectToWhatsApp() {
       printQRInTerminal: false,
       browser: ['SAND POINT Bot', 'Safari', '1.0.0']
     });
-
-    if (!pairingAttempted) {
-      pairingAttempted = true;
-      const PHONE_NUMBER = process.env.WA_PHONE_NUMBER || '+966543120557';
-      console.log('\n📱 Requesting pairing code for:', PHONE_NUMBER);
-      try {
-        const code = await sock.requestPairingCode(PHONE_NUMBER.replace(/\D/g, ''));
-        console.log('\n🔐 ============================================');
-        console.log('🔑 PAIRING CODE:', code);
-        console.log('   Enter this code on your phone to connect');
-        console.log('🔐 ============================================\n');
-      } catch (err) {
-        console.log('\n❌ Pairing code failed:', err.message);
-        console.log('   Falling back to QR code mode...\n');
-      }
-    }
 
     sock.ev.on('connection.update', (update) => {
       const { connection, lastDisconnect, qr } = update;
@@ -1339,15 +1322,14 @@ async function connectToWhatsApp() {
         console.log('\n❌ Disconnected:', lastDisconnect?.error?.message);
 
         if (shouldReconnect) {
-          console.log('🔄 Reconnecting in 5s...\n');
-          setTimeout(connectToWhatsApp, 5000);
+          console.log('🔄 Reconnecting in 10s to avoid rate limits...\n');
+          setTimeout(connectToWhatsApp, 10000);
         } else {
           console.log('🔐 Logged out. Clearing session and retrying...\n');
           try {
             rmSync(join(__dirname, 'auth_info'), { recursive: true, force: true });
           } catch (e) {}
-          pairingAttempted = false;
-          setTimeout(connectToWhatsApp, 5000);
+          setTimeout(connectToWhatsApp, 15000);
         }
       }
     });
