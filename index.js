@@ -240,13 +240,13 @@ const LANG_MESSAGES = {
       {
         title: '🌍 اختر لغة التواصل',
         rows: [
-          { title: '1. العربية 🇸🇦', description: 'اللهجة السعودية' },
-          { title: '2. English 🇬🇧', description: 'English language' },
-          { title: '3. اردو (Urdu) 🇵🇰', description: 'اردو زبان' },
-          { title: '4. नेपाली (Nepali) 🇳🇵', description: 'नेपाली भाषा' },
-          { title: '5. বাংলা (Bengali) 🇧🇩', description: 'বাংলা ভাষা' },
-          { title: '6. हिंदी (Hindi) 🇮🇳', description: 'हिंदी भाषा' },
-          { title: '7. Tagalog (Filipino) 🇵🇭', description: 'Tagalog na wika' }
+          { title: '🇸🇦 العربية (Arabic)', description: 'اللهجة السعودية' },
+          { title: '🇬🇧 English', description: 'English language' },
+          { title: '🇵🇰 اردو (Urdu)', description: 'اردو زبان' },
+          { title: '🇳🇵 नेपाली (Nepali)', description: 'नेपाली भाषा' },
+          { title: '🇧🇩 বাংলা (Bengali)', description: 'বাংলা ভাষা' },
+          { title: '🇮🇳 हिंदी (Hindi)', description: 'हिंदी भाषा' },
+          { title: '🇵🇭 Tagalog (Filipino)', description: 'Tagalog na wika' }
         ]
       }
     ]
@@ -351,13 +351,13 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
       {
         title: '🌍 Choose your language',
         rows: [
-          { title: '1. العربية 🇸🇦', description: 'Saudi dialect' },
-          { title: '2. English 🇬🇧', description: 'English language' },
-          { title: '3. اردو (Urdu) 🇵🇰', description: 'اردو زبان' },
-          { title: '4. नेपाली (Nepali) 🇳🇵', description: 'नेपाली भाषा' },
-          { title: '5. বাংলা (Bengali) 🇧🇩', description: 'বাংলা ভাষা' },
-          { title: '6. हिंदी (Hindi) 🇮🇳', description: 'हिंदी भाषा' },
-          { title: '7. Tagalog (Filipino) 🇵🇭', description: 'Tagalog na wika' }
+          { title: '🇸🇦 العربية (Arabic)', description: 'Saudi dialect' },
+          { title: '🇬🇧 English', description: 'English language' },
+          { title: '🇵🇰 اردو (Urdu)', description: 'اردو زبان' },
+          { title: '🇳🇵 नेपाली (Nepali)', description: 'नेपाली भाषा' },
+          { title: '🇧🇩 বাংলা (Bengali)', description: 'বাংলা ভাষা' },
+          { title: '🇮🇳 हिंदी (Hindi)', description: 'हिंदी भाषा' },
+          { title: '🇵🇭 Tagalog (Filipino)', description: 'Tagalog na wika' }
         ]
       }
     ]
@@ -460,13 +460,13 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
       {
         title: '🌍 اپنا زبان منتخب کریں',
         rows: [
-          { title: '1. العربية 🇸🇦', description: 'ساؤڈی ڈیئلیکٹ' },
-          { title: '2. English 🇬🇧', description: 'انگریزی زبان' },
-          { title: '3. اردو (Urdu) 🇵🇰', description: 'اردو زبان' },
-          { title: '4. नेपाली (Nepali) 🇳🇵', description: 'नेपाली भाषा' },
-          { title: '5. বাংলা (Bengali) 🇧🇩', description: 'বাংলা ভাষা' },
-          { title: '6. हिंदी (Hindi) 🇮🇳', description: 'हिंदी भाषा' },
-          { title: '7. Tagalog (Filipino) 🇵🇭', description: 'Tagalog na wika' }
+          { title: '🇸🇦 العربية (Arabic)', description: 'ساؤڈی ڈیئلیکٹ' },
+          { title: '🇬🇧 English', description: 'انگریزی زبان' },
+          { title: '🇵🇰 اردو (Urdu)', description: 'اردو زبان' },
+          { title: '🇳🇵 नेपाली (Nepali)', description: 'नेपाली भाषा' },
+          { title: '🇧🇩 বাংলা (Bengali)', description: 'বাংলা ভাষা' },
+          { title: '🇮🇳 हिंदी (Hindi)', description: 'हिंदी भाषा' },
+          { title: '🇵🇭 Tagalog (Filipino)', description: 'Tagalog na wika' }
         ]
       }
     ]
@@ -570,13 +570,13 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
       {
         title: '🌍 तपाईंको भाषा छान्नुहोस्',
         rows: [
-          { title: '1. العربية 🇸🇦', description: 'साउदी डिऐलेक्ट' },
-          { title: '2. English 🇬🇧', description: 'इंग्लिश भाषा' },
-          { title: '3. اردو (Urdu) 🇵🇰', description: 'उर्दु भाषा' },
-          { title: '4. नेपाली (Nepali) 🇳🇵', description: 'नेपाली भाषा' },
-          { title: '5. বাংলা (Bengali) 🇧🇩', description: 'बंग्ला भाषा' },
-          { title: '6. हिंदी (Hindi) 🇮🇳', description: 'हिन्दी भाषा' },
-          { title: '7. Tagalog (Filipino) 🇵🇭', description: 'ट्यागालग भाषा' }
+          { title: '🇸🇦 العربية (Arabic)', description: 'साउदी डिऐलेक्ट' },
+          { title: '🇬🇧 English', description: 'इंग्लिश भाषा' },
+          { title: '🇵🇰 اردو (Urdu)', description: 'उर्दु भाषा' },
+          { title: '🇳🇵 नेपाली (Nepali)', description: 'नेपाली भाषा' },
+          { title: '🇧🇩 বাংলা (Bengali)', description: 'बंग्ला भाषा' },
+          { title: '🇮🇳 हिंदी (Hindi)', description: 'हिन्दी भाषा' },
+          { title: '🇵🇭 Tagalog (Filipino)', description: 'ट्यागालग भाषा' }
         ]
       }
     ]
@@ -680,13 +680,13 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
       {
         title: '🌍 আপনার ভাষা নির্বাচন করুন',
         rows: [
-          { title: '1. العربية 🇸🇦', description: 'সৌদি ডিয়ালেক্ট' },
-          { title: '2. English 🇬🇧', description: 'ইংরেজি ভাষা' },
-          { title: '3. اردو (Urdu) 🇵🇰', description: 'উর্দু ভাষা' },
-          { title: '4. नेपाली (Nepali) 🇳🇵', description: 'নেপালি ভাষা' },
-          { title: '5. বাংলা (Bengali) 🇧🇩', description: 'বাংলা ভাষা' },
-          { title: '6. हिंदी (Hindi) 🇮🇳', description: 'হিন্দি ভাষা' },
-          { title: '7. Tagalog (Filipino) 🇵🇭', description: 'ট্যাগালog ভাষা' }
+          { title: '🇸🇦 العربية (Arabic)', description: 'সৌদি ডিয়ালেক্ট' },
+          { title: '🇬🇧 English', description: 'ইংরেজি ভাষা' },
+          { title: '🇵🇰 اردو (Urdu)', description: 'উর্দু ভাষা' },
+          { title: '🇳🇵 नेपाली (Nepali)', description: 'নেপালি ভাষা' },
+          { title: '🇧🇩 বাংলা (Bengali)', description: 'বাংলা ভাষা' },
+          { title: '🇮🇳 हिंदी (Hindi)', description: 'হিন্দি ভাষা' },
+          { title: '🇵🇭 Tagalog (Filipino)', description: 'ট্যাগালog ভাষা' }
         ]
       }
     ]
@@ -790,13 +790,13 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
       {
         title: '🌍 अपनी भाषा चुनें',
         rows: [
-          { title: '1. العربية 🇸🇦', description: 'साउदी डायलैक्ट' },
-          { title: '2. English 🇬🇧', description: 'इंग्लिश भाषा' },
-          { title: '3. اردو (Urdu) 🇵🇰', description: 'उर्दु भाषा' },
-          { title: '4. नेपाली (Nepali) 🇳🇵', description: 'नेपाली भाषा' },
-          { title: '5. বাংলা (Bengali) 🇧🇩', description: 'बंग्ला भाषा' },
-          { title: '6. हिंदी (Hindi) 🇮🇳', description: 'हिंदी भाषा' },
-          { title: '7. Tagalog (Filipino) 🇵🇭', description: 'टैगालॉग भाषा' }
+          { title: '🇸🇦 العربية (Arabic)', description: 'साउदी डायलैक्ट' },
+          { title: '🇬🇧 English', description: 'इंग्लिश भाषा' },
+          { title: '🇵🇰 اردو (Urdu)', description: 'उर्दु भाषा' },
+          { title: '🇳🇵 नेपाली (Nepali)', description: 'नेपाली भाषा' },
+          { title: '🇧🇩 বাংলা (Bengali)', description: 'बंग्ला भाषा' },
+          { title: '🇮🇳 हिंदी (Hindi)', description: 'हिंदी भाषा' },
+          { title: '🇵🇭 Tagalog (Filipino)', description: 'टैगालॉग भाषा' }
         ]
       }
     ]
@@ -899,13 +899,13 @@ Biyernes - Sabado: Sarado
       {
         title: '🌍 Piliin ang iyong wika',
         rows: [
-          { title: '1. العربية 🇸🇦', description: 'Saudi dialect' },
-          { title: '2. English 🇬🇧', description: 'English language' },
-          { title: '3. اردو (Urdu) 🇵🇰', description: 'اردو زبان' },
-          { title: '4. नेपाली (Nepali) 🇳🇵', description: 'नेपाली भाषा' },
-          { title: '5. বাংলা (Bengali) 🇧🇩', description: 'বাংলা ভাষা' },
-          { title: '6. हिंदी (Hindi) 🇮🇳', description: 'हिंदी भाषा' },
-          { title: '7. Tagalog (Filipino) 🇵🇭', description: 'Tagalog na wika' }
+          { title: '🇸🇦 العربية (Arabic)', description: 'Saudi dialect' },
+          { title: '🇬🇧 English', description: 'English language' },
+          { title: '🇵🇰 اردو (Urdu)', description: 'اردو زبان' },
+          { title: '🇳🇵 नेपाली (Nepali)', description: 'नेपाली भाषा' },
+          { title: '🇧🇩 বাংলা (Bengali)', description: 'বাংলা ভাষা' },
+          { title: '🇮🇳 हिंदी (Hindi)', description: 'हिंदी भाषा' },
+          { title: '🇵🇭 Tagalog (Filipino)', description: 'Tagalog na wika' }
         ]
       }
     ]
