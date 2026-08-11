@@ -73,7 +73,8 @@ function getUserState(userId) {
       phone: '',
       specialty: '',
       details: '',
-      files: []
+      files: [],
+      first_contact: true
     };
     saveUsers();
   }
@@ -96,7 +97,8 @@ function resetUserState(userId) {
     phone: '',
     specialty: '',
     details: '',
-    files: []
+    files: [],
+    first_contact: true
   };
   saveUsers();
 }
@@ -964,6 +966,16 @@ async function sendLanguageList(sock, userId) {
   await sock.sendMessage(userId, { text: body });
 }
 
+async function sendWelcomeBundle(sock, userId) {
+  const LOGO_PATH = join(__dirname, 'assets', 'logo.jpg');
+  const tAr = LANG_MESSAGES.ar;
+  await sendImageMessage(sock, userId, LOGO_PATH, tAr.greeting);
+  await sendListMessage(sock, userId, '', tAr.menuTitle, tAr.menuOptions);
+  await sendLanguageList(sock, userId);
+  getUserState(userId);
+  updateUserState(userId, { first_contact: false });
+}
+
 async function sendProfessionList(sock, userId, t, userState) {
   try {
     await sock.sendPresenceUpdate('composing', userId);
@@ -1003,8 +1015,8 @@ async function handleMessage(sock, m) {
       delete usersData[userId];
       saveUsers();
     }
-     // Force-send language selection list (contains greeting text)
-     await sendLanguageList(sock, userId);
+     // Force-send welcome bundle (logo + greeting + menu + language list)
+     await sendWelcomeBundle(sock, userId);
     return;
   }
   // ===== END STRICT OVERRIDE =====
@@ -1042,7 +1054,7 @@ async function handleMessage(sock, m) {
   
   if (text === '/start' || text === 'restart' || text.toLowerCase() === 'cancel') {
     resetUserState(userId);
-    await sendLanguageList(sock, userId);
+    await sendWelcomeBundle(sock, userId);
     return;
   }
   
@@ -1061,12 +1073,14 @@ async function handleMessage(sock, m) {
   if (userState.step === 'language') {
     if (['1', '2', '3', '4', '5', '6', '7'].includes(text)) {
       const langCode = LANG_CODES[text];
-      updateUserState(userId, { language: langCode, step: 'greeting', category: null });
+      updateUserState(userId, { language: langCode, step: 'greeting', category: null, first_contact: false });
       const tLang = LANG_MESSAGES[langCode];
       // Send company logo with greeting, then the service menu
       const LOGO_PATH = join(__dirname, 'assets', 'logo.jpg');
       await sendImageMessage(sock, userId, LOGO_PATH, tLang.greeting);
       await sendListMessage(sock, userId, '', tLang.menuTitle, tLang.menuOptions);
+    } else if (userState.first_contact) {
+      await sendWelcomeBundle(sock, userId);
     } else {
       await sendLanguageList(sock, userId);
     }
@@ -1242,7 +1256,7 @@ async function handleMessage(sock, m) {
     const greetings = ['hi', 'hello', 'مرحبا', 'اهلا', 'hello', 'hey', 'start', 'begin', 'اهلاً', 'اهلا', 'assalam', 'السلام'];
     if (greetings.some(g => text.toLowerCase() === g)) {
       resetUserState(userId);
-      await sendLanguageList(sock, userId);
+      await sendWelcomeBundle(sock, userId);
     } else {
       await sendMsg(lang === 'ar' ? '👋 مرحباً مرة أخرى! اكتب 0 للبدء من جديد.' : '👋 Hello again! Type 0 to start over.');
     }
@@ -1250,7 +1264,7 @@ async function handleMessage(sock, m) {
   }
   
    // Fallback for unknown states
-  await sendLanguageList(sock, userId);
+  await sendWelcomeBundle(sock, userId);
  }
 
 let currentQrData = null;
