@@ -43,13 +43,6 @@ function isDuplicate(id) {
   return false;
 }
 
-// Global back command check (broader match)
-function isBackCommand(text, lang) {
-  const sanitized = sanitizeArabicNumerals(text.toLowerCase().trim());
-  const backKeywords = ['back', 'تعديل', 'رجوع', 'الغاء', 'cancel', 'عودة'];
-  return backKeywords.some(k => sanitized === k);
-}
-
 let usersData = {};
 
 function loadUsers() {
@@ -154,13 +147,7 @@ const LANG_MESSAGES = {
     greeting: `مرحباً بكم في شركة ساند بوينت للمقاولات (SAND POINT GLOBAL) - الدمام
 نحن شركة مقاولات رائدة في المنطقة الشرقية، ونقدم خدماتنا بأعلى معايير الجودة.
 يرجى اختيار الخدمة المطلوبة من القائمة:
-1️⃣ عميل جديد - استفسار أو طلب عرض سعر
-2️⃣ مقاول/مورد - التعاون مع شركة ساند بوينت
-3️⃣ باحث عن عمل - الانضمام إلى فريقنا
-4️⃣ ملف الشركة - معرفة المزيد عنا
-5️⃣ بيانات التواصل - كيف تواصل معانا
-📝 اكتب رقم الخيار...
-0️⃣ للرجوع وتغيير اللغة / Go Back`,
+📝 اكتب الرقم أو اختر من القائمة...`,
     options: {
       1: `عميل جديد - نرحب بكم! عشان نتعرف على مشروعك، نحتاج:
 • نوع العقار (سكني، تجاري، صناعي، إلخ)
@@ -267,14 +254,8 @@ const LANG_MESSAGES = {
   en: {
     greeting: `Welcome to Sand Point Contracting (SAND POINT GLOBAL) - Dammam 🏗️
 We are a leading Saudi contracting company serving the Eastern Province with top-quality construction services!
-Please choose the service you need:
-1️⃣ New Client - Request a quote or inquiry
-2️⃣ Subcontractor - Partner with Sand Point
-3️⃣ Job Seeker - Join our team
-4️⃣ Company Profile - Learn more about us
-5️⃣ Contact Info - How to reach us
-📝 Enter the option number...
-0️⃣ Go Back / تغيير اللغة`,
+Please choose the service you need from the menu below:
+📝 Enter the option number...`,
     options: {
       1: `New Client - We're happy to assist you!
 To provide you with the best service, we need:
@@ -384,12 +365,7 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
   ur: {
     greeting: `سینڈ پوائنٹ گلوبل کانٹریکٹنگ (SAND POINT GLOBAL) - جلیل میں سواگت ہے 🏗️
 ہم ایک سعودی کنٹریکٹر ہیں جو مشرقی علاقائی کی تعمیر کی کوشش کرتے ہیں!
-براہ کرم درج ذیل سروسز میں سے ایک منتخب کریں:
-1️⃣ نیو کلائنٹ - قیمت یا استفسار
-2️⃣ سب کونٹراکٹر - سینڈ پوائنٹ کے ساتھ شراکت
-3️⃣ جاب سیکر - ہماری ٹیم میں شامل ہوں
-4️⃣ کمپنی پروفائل - ہمارے بارے میں مزید جانیں
-5️⃣ رابطہ معلومات - ہم سے کیسے رابطے میں رہیں
+براہ کرم مندرجہ ذیل سروسز میں سے ایک منتخب کریں:
 📝 نمبر لکھیں...`,
     options: {
       1: `نیو کلائنٹ - ہم آپ کی خدمت کرنا چاہتے ہیں!
@@ -405,9 +381,11 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
 • آپ کا/کمپنی کا نام
 • آپ کی تخصص (کنکریشن، الیکٹریکل، پلامبر، ایسی اے سی، وغیرہ)
 • موبائل نمبر
-📝 **آپ کا/کمپنی کا نام** لکھیں...`,
+📝 **آپ کا/کمپنی کا نام** لکھیں...
+0️⃣ للرجوع وتغيير اللغة / Go Back`,
       3: `جاب سیکر - ہماری ٹیم میں شامل ہونے کے لئے آپ کے دلچسپی کے لئے شکریہ!
-آپ کی درخواست کو درست انداز میں رواج کے لئے مہینے کریں: **آپ کی پیشہ وری کیا ہے؟** (اینجینئر، ٹیکنیشین، یا کارگر؟)`,
+آپ کی درخواست کو درست انداز میں رواج کے لئے مہینے کریں: **آپ کی پیشہ وری کیا ہے؟** (اینجینئر، ٹیکنیشین، یا کارگر؟)
+0️⃣ للرجوع وتغيير اللغة / Go Back`,
       4: `🏢 **کمپنی پروفائل - سینڈ پوائنٹ گلوبل**:
 سعودی عرب کی ایک اگرو معاشرے کی کمپنی، الخلیج میں مرکزی دفتر
 
@@ -461,8 +439,8 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
       invalid_name: '❌ نام بہت مختصر ہے۔ براہ کرم اپنا مکمل نام لکھیں:',
       invalid_profession: '❌ براہ کرم اپنی پیشہ وری واضح بنائیں: انجینئر، ٹیکنیشین، یا مجرور؟',
       thank_you: 'ہماری ٹیم سے رابطے کو شکریہ! ہم نے آپ کے پیغام کو موصول کیا ہے اور ہم جلد از جلد واپس آئیں گے۔ 🌟',
-      engineer_prompt: '✅ آپ کی درخواست ہمارے انجینئری واحد کے لیے موصول ہوگئی۔ براہ کرم اپنا CV (PDF) ایٹیچ کریں۔ یا بغیر فائل کے آگے بڑھنے کے لئے **done** لکھیں۔',
-      worker_prompt: '✅ آپ کی صلاحیت کے لئے براہ کرم اپنے پچھلے کام کی تصاویر یا ویڈیو ایڈیٹ کریں۔ یا بغیر فائل کے آگے بڑھنے کے لئے **done** لکھیں۔'
+      engineer_prompt: '✅ آپ کی درخواست ہمارے انجینئری واحد کے لیے موصول ہوگئی۔ براہ کرم اپنا CV (PDF) ایٹیچ کریں۔ یا بغیر فائل کے آگے بڑھنے کے لئے **تم** لکھیں۔',
+      worker_prompt: '✅ آپ کی صلاحیت کے لئے براہ کرم اپنے پچھلے کام کی تصاویر یا ویڈیو ایڈیٹ کریں۔ یا بغیر فائل کے آگے بڑھنے کے لئے **تم** لکھیں۔'
     },
     summary: `✅ آپ کا درخواست برائے موصول!\n📋 درج شدہ تفصیلات:\n• نام: {name}\n• موبائل: {phone}\n• تفصیلات: {details}\n\n📞 ہمارا فون: +966 543120557\n🕐 ہم 24 گھنٹے کے اندر آپ سے رابطے کریں گے۔\nسینڈ پوائنٹ گلوبل پر بھروسے کے لئے شکریہ 🌟\n\n📝 مرکزی مینو کے لیے **9** لکھیں یا سیمیل رابطے کیلئے **0** لکچیں...`,
     menuTitle: '📋 سروسز کی مینو - سینڈ پوائنٹ گلوبل',
@@ -496,29 +474,28 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
   ne: {
     greeting: `स्यान्ड पोइंट ग्लोबल कन्ट्राक्टिङ (SAND POINT GLOBAL) - दम्मममा स्वागत छ 🏗️
 हामी पूर्वी प्रांवमा एक अग्रणी सउदी निर्माण कम्पनी छौं!
-कृपया तलबाट सेवा छनोट गर्नुहोस्:
-1️⃣ नयाँ ग्राहक - मूल्य अनुमान वा प्रश्न
-2️⃣ सबकन्ट्राक्टर - स्यान्ड पोइंटसँग साझेदारी
-3️⃣ रोजगारीको खोजी - हाम्रो टोलीमा जोडिनुहोस्
-4️⃣ कम्पनी प्रोफाइल - हामीबारे थप जान्नुहोस्
-5️⃣ सम्पर्क जानकारी - हामीसँग कसरी सम्पर्क गर्ने
-📝 नम्बर लेख्नुहोस् (1-5)...`,
+कृपया तलबाट सेवा छनोट गर्नुहोस्:`,
     options: {
       1: `नयाँ ग्राहक - हामी तपाईंको सेवा गर्न खुश हुनुहुन्छ!
 सर्वोत्तम सेवा प्रदान गर्न हामी आवश्यक छ:
 • सम्पत्ति को प्रकार (बासिन्दा, व्यावसायिक, औद्योगिक आदि)
+• कामको प्रकार (नयाँ निर्माण, रीनोभेशन, मर्मत)
 • सम्पत्ति क्षेत्रफल वर्ग मिटरमा
 • दम्ममको डिस्ट्रिक्ट/पड़ोस
-📝 **सम्पत्ति का प्रकार** लेख्नुहोस्...`,
+📝 **सम्पत्ति को प्रकार** लेख्नुहोस्...
+
+0️⃣ लेख्नुहोस् / Go Back`,
       2: `सबकन्ट्राक्टर - हाम्रो साझेदारी नेटवर्कमा स्वागत छ!
 कम्पनीको प्रोफाइल दर्ता गर्न र हामीलाई कसरी काम गर्न चाहनुहुन्छ:
 • कम्पनी प्रोफाइल (PDF वा चित्र)
 • तपाईंको/कम्पनीको नाम
 • तपाईंको विशेषज्ञता (निर्माण, बिद्युत, प्लम्बिङ, एसी, अन्य)
 • मोबाइल नम्बर
-📝 **तपाईंको/कम्पनीको नाम** लेख्नुहोस्...`,
+📝 **तपाईंको/कम्पनीको नाम** लेख्नुहोस्...
+0️⃣ ललेगा / Go Back`,
       3: `रोजगारीको खोजी - हाम्रो टोलीमा जोडिन चाहनुभएकोमा धन्यवाद!
-तपाईंको आवेदनलाई सही रूपमा मार्गित गर्न, हामीलाई बताउनुहोस्: **तपाईंको पेशा के हो?** (इन्जिनियर, टेक्निशियन, वा मजदुर)?`,
+तपाईंको आवेदनलाई सही रूपमा मार्गित गर्न, हामीलाई बताउनुहोस्: **तपाईंको पेशा के हो?** (इन्जिनियर, टेक्निशियन, वा मजदुर)?
+0️⃣ ललेगا / Go Back`,
       4: `🏢 **कम्पनी प्रोफाइल - स्यान्ड पोइंट ग्लोबल कन्ट्राक्टिङ**:
 सउदी अरबको पूर्वी प्रांव, दम्मममा अवस्थित अग्रणी निर्माण कम्पनी
 
@@ -607,29 +584,28 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
   bn: {
     greeting: `স্যান্ড পয়েন্ট গ্লোবাল কন্ট্রাক্টিং (SAND POINT GLOBAL) - ঢাকামে স্বাগতম 🏗️
 আমরা পূর্বীয় প্রান্তে একটি অগ্রণী সৌদি ঠিঠিকল কোম্পানি।
-নিচের সেবাগুলি থেকে একটি বেছে নিন:
-1️⃣ নতুন গ্রাহক - মূল্য আঁচন বা প্রশ্ন
-2️⃣ সাবকন্ট্রাক্টর - স্যান্ড পয়েন্টের সাথে অংশীদারশী
-3️⃣ চাকরীর অনুসন্ধান - আমাদের দলে যুক্ত হন
-4️⃣ কোম্পানি প্রোফাইল - আমাদের সম্পর্কে আরও জানুন
-5️⃣ যোগাযোগের তথ্য - আমরা কীভাবে যোগাযোগ করব
-📝 বিকল্প নম্বর লিখুন (1-5)...`,
+নিচের সেবাগুলি থেকে একটি বাছাই করুন:`,
     options: {
       1: `নতুন গ্রাহক - আমরা আপনার সেবা করতে আনন্দিত!
 সর্বোত্তম সেবা প্রদানের জন্য আমরা প্রয়োজন:
 • সম্পত্তির ধরন (বাসস্থান, বাণিজ্যিক, ঔদ্যোগিক ইত্যাদি)
+• কর্মের ধরন (নতুন নির্মাণ, রীনভেশন, রক্ষণাবেক্ষণ)
 • সম্পত্তির ক্ষেত্রফল বর্গ মিটারে
 • গাঢ়াম (ঢাকাম) এর জেলা/পড়োস
-📝 **সম্পত্তির ধরন** লিখে শুরু করুন...`,
+📝 **সম্পত্তির ধরন** লিখে শুরু করুন...
+
+0️⃣ ফিরতি / Go Back`,
       2: `সাবকন্ট্রাক্টর - আমাদের অংশীদার নেটওয়ার্কে স্বাগতম!
 কোম্পানি প্রোফাইল রেজিস্টার করতে এবং আমাদের সাথে কাজ করতে:
 • কোম্পানি প্রোফাইল (PDF বা ছবি)
 • আপনার/কোম্পানির নাম
 • বিশেষজ্ঞতা (নির্মাণ, বৈদ্যুতিক, প্লাম্বিং, এসি, অন্যান্য)
 • মোবাইল নম্বর
-📝 **আপনার/কোম্পানির নাম** লিখে শুরু করুন...`,
+📝 **আপনার/কোম্পানির নাম** লিখে শুরু করুন...
+0️⃣ ফিরতি / Go Back`,
       3: `চাকরীর অনুসন্ধান - আমাদের দলে যুক্ত হওয়ার আগ্রহের জন্য ধন্যবাদ!
-আপনার আবেদন সঠিকভাবে পাথরতে আমাকে বলুন: **আপনার পেশা কী?** (ইঞ্জিনিয়ার, টেকনিসিয়ান, বা মজুর)?`,
+আপনার আবেদন সঠিকভাবে পাথরতে আমাকে বলুন: **আপনার পেশা কী?** (ইঞ্জিনিয়ার, টেকনিসিয়ান, বা মজুর)?
+0️⃣ ফিরতি / Go Back`,
       4: `🏢 **কোম্পানি প্রোফাইল - স্যান্ড পয়েন্ট গ্লোবাল কন্ট্রাক্টিং**:
 সৌদি আরবের পূর্বীয় প্রান্তে অবস্থিত অগ্রণী নির্মাণ কোম্পানি
 
@@ -718,29 +694,28 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
   hi: {
     greeting: `सैंड पॉइंट ग्लोबल कंट्राक्टिंग (SAND POINT GLOBAL) - दम्मम में स्वागत है 🏗️
 हम ईस्टर्न प्रांट में एक अग्रणी सउदी निर्माण कंपनी हैं!
-कृपया नीचे से सेवा चुनें:
-1️⃣ नए ग्राहक - कीमत अनुमान या प्रश्न पूछें
-2️⃣ सबकंट्राक्टर - सैंड पॉइंट के साथ साझेदारी
-3️⃣ नौकरी की तलाश - अपना CV भेजें
-4️⃣ कंपनी प्रोफाइल - हमांरे बारे में और जानें
-5️⃣ संपर्क जानकारी - हमारा पता, फोन और काम का समय
-📝 विकल्प नंबर लिखें (1-5)...`,
+कृपया नीचे से सेवा चुनें:`,
     options: {
       1: `नए ग्राहक - हम आपकी सेवा करने के लिए खुश हैं!
 सर्वश्रेष्ठ सेवा देने के लिए हमें चाहिए:
 • सम्पत्ति का प्रकार (बाग़मती, व्यावसायिक, औद्योगिक आदि)
+• काम का प्रकार (नई निर्माण, रीनोवेशन, मरम्मत)
 • सम्पत्ति का क्षेत्रफल वर्ग मीटर में
 • दम्मम का डिस्ट्रिक्ट/पड़ोस
-📝 **सम्पत्ति के प्रकार** से शुरू करें...`,
+📝 **सम्पत्ति के प्रकार** से शुरू करें...
+
+0️⃣ वापसी / Go Back`,
       2: `सबकंट्राक्टर - हमारे साझेदार नेटवर्क में स्वागत है!
 अपनी कंपनी प्रोफाइल रजिस्टर करने और हमके साथ काम करने के लिए:
 • कंपनी प्रोफाइल (PDF या छवि)
 • आपका/कंपनी का नाम
 • आपका विशेषज्ञता (निर्माण, बिजली, प्लंबिंग, एसी, अन्य)
 • मोबाइल नंबर
-📝 **आपका/कंपनी का नाम** से शुरू करें...`,
+📝 **आपका/कंपनी का नाम** से शुरू करें...
+0️⃣ वापसी / Go Back`,
       3: `नौकरी की तलाश - हमारी टीम में जुड़ने के लिए धन्यवाद!
-अपने आवेदन को सही ढंग से मार्गदर्शित करने के लिए, बताइए: **आपका पेशा क्या है?** (इंजीनियर, टेक्नीशियन, या मजदूर)?`,
+अपने आवेदन को सही ढंग से मार्गदर्शित करने के लिए, बताइए: **आपका पेशा क्या है?** (इंजीनियर, टेक्नीशियन, या मजदूर)?
+0️⃣ वापसी / Go Back`,
       4: `🏢 **कंपनी प्रोफाइल - सैंड पॉइंट ग्लोबल कंट्राक्टिंग**:
 सउदी अरब के पूर्वी प्रांट, दम्मम में स्थित एक अग्रणी निर्माण कंपनी
 
@@ -829,29 +804,28 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
   tl: {
     greeting: `Tugon sa Sand Point Global Contracting (SAND POINT GLOBAL) - Dammam 🏗️
 Kami ay isang naileading na Saudi kontratista sa Eastern Province!
-Pumili ng serbisyo mula sa listahan sa ibaba:
-1️⃣ Bagong Kliyente - Hilingin ang presyo o query
-2️⃣ Subcontractor - Maging partner ng Sand Point
-3️⃣ Job Seeker - Sumali sa aming koponan
-4️⃣ Kumpanya na Profile - Alamin pa tungkol sa amin
-5️⃣ Contact Info - Paano mo kaming makikinan
-📝 Ilagay ang numero (1-5)...`,
+Pumili ng serbisyo mula sa listahan sa ibaba:`,
     options: {
       1: `Bagong Kliyente - Natutuwa kaming magsilbi sa'yo!
 Para sa pinakamagandang serbisyo, kailangan namin:
 • Uri ng property (tirahan, commercial, industrial, iba pa)
+• Uri ng trabaho (bagong gawa, rehabilitasyon, panuturis)
 • Sukat property sa square meters
 • Distrito/Kapitbahay sa Dammam
-📝 Magsimula sa **uri ng property**...`,
+📝 Magsimula sa **uri ng property**...
+
+0️⃣ Bumalik / Go Back`,
       2: `Subcontractor - Maligayang pagdating sa aming partner network!
 Upang mag-register at magsama-sama sa amin:
 • Kumpanya profile (PDF o larawan)
 • Pangalan mo/kumpanya
 • Espesyalisasyon mo (Konstruksyon, Elektura, Plomero, AC, iba pa)
 • Mobile number
-📝 Magsimula sa **pangalan mo/kumpanya**...`,
+📝 Magsimula sa **pangalan mo/kumpanya**...
+0️⃣ Bumalik / Go Back`,
       3: `Job Seeker - Salamat sa iyong interes!
-Upang maupo ang iyong application nang tama, sabihin mo: **Ano ang iyong propesyon?** (Inhenyero, Tekniko, o Manggagawa)?`,
+Upang maupo ang iyong application nang tama, sabihin mo: **Ano ang iyong propesyon?** (Inhenyero, Tekniko, o Manggagawa)?
+0️⃣ Bumalik / Go Back`,
       4: `🏢 **Kumpanya Profile - Sand Point Global Contracting (SAND POINT GLOBAL)**:
 Isang naileading na Saudi kontratista sa Dammam, Eastern Province
 
@@ -949,16 +923,6 @@ const LANG_CODES = {
   '7': 'tl'
 };
 
-const LANGUAGE_SELECTION = `🏗️ شركة ساند بوينت للمقاولات - الدمام
-🌍 Please choose your language / الرجاء اختيار لغة التواصل:
-1. العربية 🇸🇦
-2. English 🇬🇧
-3. اردو (Urdu) 🇵🇰
-4. नेपाली (Nepali) 🇳🇵
-5. বাংলા (Bengali) 🇧🇩
-6. हिंदी (Hindi) 🇮🇳
-7. Tagalog (Filipino) 🇵🇭`;
-
 async function sendListMessage(sock, userId, text, title, sections) {
   try {
     await sock.sendPresenceUpdate('composing', userId);
@@ -982,13 +946,11 @@ async function sendLanguageList(sock, userId) {
   } catch (e) {}
   await humanDelay();
   
-  const sections = LANG_MESSAGES.ar.languageList;
   const listMessage = {
-    text: LANGUAGE_SELECTION + '\n\n0️⃣ للرجوع وتغيير اللغة / Go Back',
-    footer: 'شركة ساند بوينت للمقاولات - اختر لغتك / Choose your language',
+    text: '🌍 اختر لغة التواصل / Please choose your language / الرجاء اختيار لغة التواصل',
     title: '🌍 اختر اللغة / Choose Language',
     buttonText: 'اختر اللغة / Choose Language',
-    sections
+    sections: LANG_MESSAGES.ar.languageList
   };
   
   await sock.sendMessage(userId, listMessage);
