@@ -927,15 +927,21 @@ async function sendListMessage(sock, userId, text, title, sections) {
     await sock.sendPresenceUpdate('composing', userId);
   } catch (e) {}
   await humanDelay();
-  
-  const listMessage = {
-    text,
-    title,
-    buttonText: 'عرض القائمة / View List',
-    sections
-  };
-  
-  await sock.sendMessage(userId, listMessage);
+
+  let body = '';
+  if (text) body += text + '\n\n';
+  if (title) body += '*' + title + '*\n';
+
+  let num = 0;
+  for (const section of sections) {
+    for (const row of section.rows || []) {
+      num++;
+      body += `\n${num}️⃣ ${row.title}` + (row.description ? ` - ${row.description}` : '');
+    }
+  }
+  body += '\n\n📝 اكتب رقم الاختيار / Type the number';
+
+  await sock.sendMessage(userId, { text: body });
 }
 
 async function sendLanguageList(sock, userId) {
@@ -943,15 +949,19 @@ async function sendLanguageList(sock, userId) {
     await sock.sendPresenceUpdate('composing', userId);
   } catch (e) {}
   await humanDelay();
-  
-  const listMessage = {
-    text: '🌍 اختر لغة التواصل / Please choose your language / الرجاء اختيار لغة التواصل',
-    title: '🌍 اختر اللغة / Choose Language',
-    buttonText: 'اختر اللغة / Choose Language',
-    sections: LANG_MESSAGES.ar.languageList
-  };
-  
-  await sock.sendMessage(userId, listMessage);
+
+  const body =
+    '🌍 اختر لغة التواصل / Please choose your language / الرجاء اختيار لغة التواصل\n\n' +
+    '1️⃣ 🇸🇦 العربية (Arabic)\n' +
+    '2️⃣ 🇬🇧 English\n' +
+    '3️⃣ 🇵🇰 اردو (Urdu)\n' +
+    '4️⃣ 🇳🇵 नेपाली (Nepali)\n' +
+    '5️⃣ 🇧🇩 বাংলা (Bengali)\n' +
+    '6️⃣ 🇮🇳 हिंदी (Hindi)\n' +
+    '7️⃣ 🇵🇭 Tagalog (Filipino)\n\n' +
+    '📝 اكتب رقم اللغة / Type the number';
+
+  await sock.sendMessage(userId, { text: body });
 }
 
 async function sendProfessionList(sock, userId, t, userState) {
@@ -959,26 +969,17 @@ async function sendProfessionList(sock, userId, t, userState) {
     await sock.sendPresenceUpdate('composing', userId);
   } catch (e) {}
   await humanDelay();
-  
+
   const lang = userState.language || 'en';
-  const sections = [{
-    title: lang === 'ar' ? 'المهن / Professions' : 'Professions',
-    rows: [
-      { title: lang === 'ar' ? '👨‍💼 مهندس' : '👨‍💼 Engineer', description: lang === 'ar' ? 'مهندس مدنى أو ميكانيكي' : 'Civil or Mechanical Engineer' },
-      { title: lang === 'ar' ? '🔧 تقني' : '🔧 Technician', description: lang === 'ar' ? 'تقني مختبر' : 'Lab Technician or Supervisor' },
-      { title: lang === 'ar' ? '👷 عامل' : '👷 Worker', description: lang === 'ar' ? 'عامل بناء أو نجار' : 'Construction Worker or Carpenter' }
-    ]
-  }];
-  
-  const listMessage = {
-    text: t.options['3'],
-    footer: 'شركة ساند بوينت للمقاولات - اختر مهنتك / Choose your profession\n0️⃣ للرجوع وتغيير اللغة / Go Back',
-    title: '💼 ' + (lang === 'ar' ? 'ماهي مهنتك؟' : 'What is your profession?'),
-    buttonText: lang === 'ar' ? 'اختر المهنة' : 'Choose Profession',
-    sections
-  };
-  
-  await sock.sendMessage(userId, listMessage);
+  const body =
+    t.options['3'] + '\n\n' +
+    '💼 ' + (lang === 'ar' ? 'ماهي مهنتك؟' : 'What is your profession?') + '\n\n' +
+    '1️⃣ ' + (lang === 'ar' ? '👨‍💼 مهندس' : '👨‍💼 Engineer') + ' - ' + (lang === 'ar' ? 'مهندس مدنى أو ميكانيكي' : 'Civil or Mechanical Engineer') + '\n' +
+    '2️⃣ ' + (lang === 'ar' ? '🔧 تقني' : '🔧 Technician') + ' - ' + (lang === 'ar' ? 'تقني مختبر' : 'Lab Technician or Supervisor') + '\n' +
+    '3️⃣ ' + (lang === 'ar' ? '👷 عامل' : '👷 Worker') + ' - ' + (lang === 'ar' ? 'عامل بناء أو نجار' : 'Construction Worker or Carpenter') + '\n\n' +
+    '0️⃣ للرجوع وتغيير اللغة / Go Back';
+
+  await sock.sendMessage(userId, { text: body });
 }
 
 async function handleMessage(sock, m) {
@@ -1117,11 +1118,11 @@ async function handleMessage(sock, m) {
     const lowerText = text.toLowerCase();
     let profession = null;
     
-    if (lowerText.includes('engineer') || lowerText.includes('مهندس') || lowerText.includes('इन्जिनियर') || lowerText.includes('ইঞ্জিনিয়ার')) {
+    if (text === '1' || lowerText.includes('engineer') || lowerText.includes('مهندس') || lowerText.includes('इन्जिनियर') || lowerText.includes('ইঞ্জিনিয়ার')) {
       profession = 'engineer';
-    } else if (lowerText.includes('technician') || lowerText.includes('تقني') || lowerText.includes('टेक्निशियन') || lowerText.includes('টেকনিসিয়ান')) {
+    } else if (text === '2' || lowerText.includes('technician') || lowerText.includes('تقني') || lowerText.includes('टेक्निशियन') || lowerText.includes('টেকনিসিয়ান')) {
       profession = 'technician';
-    } else if (lowerText.includes('worker') || lowerText.includes('عامل') || lowerText.includes('मजदुर') || lowerText.includes('মজুর') || lowerText.includes('trabaho') || lowerText.includes('manggagawa')) {
+    } else if (text === '3' || lowerText.includes('worker') || lowerText.includes('عامل') || lowerText.includes('मजदुर') || lowerText.includes('মজুর') || lowerText.includes('trabaho') || lowerText.includes('manggagawa')) {
       profession = 'worker';
     }
     
