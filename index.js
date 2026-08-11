@@ -967,10 +967,8 @@ async function sendLanguageList(sock, userId) {
 }
 
 async function sendWelcomeBundle(sock, userId) {
-  const LOGO_PATH = join(__dirname, 'assets', 'logo.jpg');
   const tAr = LANG_MESSAGES.ar;
-  await sendImageMessage(sock, userId, LOGO_PATH, tAr.greeting);
-  await sendListMessage(sock, userId, '', tAr.menuTitle, tAr.menuOptions);
+  await sendHumanLikeMessage(sock, userId, tAr.greeting);
   await sendLanguageList(sock, userId);
   getUserState(userId);
   updateUserState(userId, { first_contact: false });
