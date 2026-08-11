@@ -156,7 +156,7 @@ const LANG_MESSAGES = {
 • نوع الأعمال (بناء، تشطيب، صيانة)
 • مساحة العقار بالمتر المربع
 • الحي / المنطقة في الدمام
-📝 ابدأ بـ **نوع العقار**...
+📝 ابدأ بـ **اسمك**... 
 0️⃣ للرجوع وتغيير اللغة / Go Back`,
       2: `مقاول/مورد - نرحب بك في شبكة شركائنا! عشان نرفع ملفك لقسم المشاريع ونتعامل معك بجدية، نحتاج:
 • الملف التجاري (PDF أو صورة)
@@ -265,7 +265,7 @@ To provide you with the best service, we need:
 • Type of Work (new construction, renovation, maintenance)
 • Property area in square meters
 • District/neighborhood in Dammam
-📝 Start with **property type**...
+📝 Start with **your name**...
 0️⃣ Go Back / تغيير اللغة`,
       2: `Subcontractor - Welcome to our partner network!
 To register your company profile and work with us properly:
@@ -376,7 +376,7 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
 • کام کی قسم (نیا ازائدہ، دوبارہ تعمیر، رکف صیانت)
 • پراپرٹی کریویچر مربع میٹر میں
 • ڈسٹرکٹ/پڑوس میں
-📝 **پراپرٹی کی قسم** لکھیں...`,
+📝 **اپنا نام** لکھیں...`,
       2: `سب کونٹراکٹر - ہمارے ساتھ شراکت کے نیٹ ورک میں خوش آمدید!
 اپنا کمپنی پروفائل رجسٹر کرنا اور ہم سے ملنا ہے تو:
 • کمپنی پروفائل (PDF یا تصویر)
@@ -484,8 +484,7 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
 • कामको प्रकार (नयाँ निर्माण, रीनोभेशन, मर्मत)
 • सम्पत्ति क्षेत्रफल वर्ग मिटरमा
 • दम्ममको डिस्ट्रिक्ट/पड़ोस
-📝 **सम्पत्ति को प्रकार** लेख्नुहोस्...
-
+📝 **आफ्नो नाम** लेख्नुहोस्...
 0️⃣ लेख्नुहोस् / Go Back`,
       2: `सबकन्ट्राक्टर - हाम्रो साझेदारी नेटवर्कमा स्वागत छ!
 कम्पनीको प्रोफाइल दर्ता गर्न र हामीलाई कसरी काम गर्न चाहनुहुन्छ:
@@ -594,7 +593,7 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
 • কর্মের ধরন (নতুন নির্মাণ, রীনভেশন, রক্ষণাবেক্ষণ)
 • সম্পত্তির ক্ষেত্রফল বর্গ মিটারে
 • গাঢ়াম (ঢাকাম) এর জেলা/পড়োস
-📝 **সম্পত্তির ধরন** লিখে শুরু করুন...
+📝 **আপনার নাম** লিখে শুরু করুন...
 
 0️⃣ ফিরতি / Go Back`,
       2: `সাবকন্ট্রাক্টর - আমাদের অংশীদার নেটওয়ার্কে স্বাগতম!
@@ -704,7 +703,7 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
 • काम का प्रकार (नई निर्माण, रीनोवेशन, मरम्मत)
 • सम्पत्ति का क्षेत्रफल वर्ग मीटर में
 • दम्मम का डिस्ट्रिक्ट/पड़ोस
-📝 **सम्पत्ति के प्रकार** से शुरू करें...
+📝 **अपना नाम** से शुरू करें...
 
 0️⃣ वापसी / Go Back`,
       2: `सबकंट्राक्टर - हमारे साझेदार नेटवर्क में स्वागत है!
@@ -814,7 +813,7 @@ Para sa pinakamagandang serbisyo, kailangan namin:
 • Uri ng trabaho (bagong gawa, rehabilitasyon, panuturis)
 • Sukat property sa square meters
 • Distrito/Kapitbahay sa Dammam
-📝 Magsimula sa **uri ng property**...
+📝 Magsimula sa **iyong pangalan**...
 
 0️⃣ Bumalik / Go Back`,
       2: `Subcontractor - Maligayang pagdating sa aming partner network!
@@ -938,7 +937,8 @@ async function sendListMessage(sock, userId, text, title, sections) {
   for (const section of sections) {
     for (const row of section.rows || []) {
       num++;
-      body += `\n${num}️⃣ ${row.title}` + (row.description ? ` - ${row.description}` : '');
+      const emoji = /^\d+️⃣/.test(row.title) ? '' : `${num}️⃣ `;
+      body += `\n${emoji}${row.title}` + (row.description ? ` - ${row.description}` : '');
     }
   }
   body += '\n\n📝 اكتب رقم الاختيار / Type the number';
