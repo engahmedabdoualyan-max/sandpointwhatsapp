@@ -221,8 +221,8 @@ const LANG_MESSAGES = {
       invalid_name: '❌ الاسم قصير جداً. الحين اكتب اسمك الكامل:',
       invalid_profession: '❌ يرجى تحديد مهنتك بدقة: مهندس، تقني، أم عامل؟',
       thank_you: 'حياك الله! تواصلك مع فريقنا تم استلامه. بنراجع طلبك ونتواصل معاك قريب. 🌟',
-      engineer_prompt: '✅ عشان يتم فرز طلبك والتواصل مع القسم المناسب، يرجى إرفاق السيرة الذاتية (PDF) الآن. أو اكتب **تم** للمتابعة بدون ملف.\n0️⃣ للرجوع وتغيير اللغة / Go Back',
-      worker_prompt: '✅ عشان نطلع على خبرتك ومهاراتك، يرجى إرفاق صور أو فيديوهات من أعمال سابقة. أو اكتب **تم** للمتابعة.\n0️⃣ للرجوع وتغيير اللغة / Go Back'
+      engineer_prompt: '✅ عشان يتم فرز طلبك والتواصل مع القسم المناسب، يرجى إرفاق السيرة الذاتية (PDF) الآن. أو اكتب **تم** للمتابعة بدون ملف.',
+      worker_prompt: '✅ عشان نطلع على خبرتك ومهاراتك، يرجى إرفاق صور أو فيديوهات من أعمال سابقة. أو اكتب **تم** للمتابعة.'
     },
     summary: '✅ تم استلام طلبك بنجاح!\n📋 البيانات المسجلة:\n• الاسم: {name}\n• الجوال: {phone}\n• التفاصيل: {details}\n\n📞 هاتفنا: +966 543120557\n🕐 بنتواصل معاك خلال 24 ساعة إن شاء الله.\nشكراً لوثوقك بشركة ساند بوينت للمقاولات 🌟\n\n📝 اكتب **9** للعودة للقائمة الرئيسية\n0️⃣ للرجوع وتغيير اللغة / Go Back',
     menuTitle: '📋 قائمة الخدمات - شركة ساند بوينت للمقاولات',
@@ -332,8 +332,8 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
       invalid_name: '❌ Name too short. Please enter your full name:',
       invalid_profession: '❌ Please specify your profession: Engineer, Technician, or Worker?',
       thank_you: 'Thank you for reaching out to our team! We have received your message and will get back to you shortly. 🌟',
-      engineer_prompt: '✅ Your application will be reviewed by our engineering department. Please attach your CV (PDF). Or type **done** to proceed without a file.\n0️⃣ Go Back / تغيير اللغة',
-      worker_prompt: '✅ In order to assess your skills properly, please attach photos or videos of your previous work. Or type **done** to proceed without files.\n0️⃣ Go Back / تغيير اللغة'
+      engineer_prompt: '✅ Your application will be reviewed by our engineering department. Please attach your CV (PDF). Or type **done** to proceed without a file.',
+      worker_prompt: '✅ In order to assess your skills properly, please attach photos or videos of your previous work. Or type **done** to proceed without files.'
     },
     summary: '✅ Your request has been received successfully!\n📋 Registered details:\n• Name: {name}\n• Mobile: {phone}\n• Details: {details}\n\n📞 Our phone: +966 543120557\n🕐 We will contact you within 24 hours.\nThank you for trusting Sand Point Contracting 🌟\n\n📝 Enter **9** for main menu\n0️⃣ Go Back / تغيير اللغة',
     menuTitle: '📋 Service Menu - Sand Point Contracting',
@@ -441,7 +441,7 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
       invalid_name: '❌ نام بہت مختصر ہے۔ براہ کرم اپنا مکمل نام لکھیں:',
       invalid_profession: '❌ براہ کرم اپنی پیشہ وری واضح بنائیں: انجینئر، ٹیکنیشین، یا مجرور؟',
       thank_you: 'ہماری ٹیم سے رابطے کو شکریہ! ہم نے آپ کے پیغام کو موصول کیا ہے اور ہم جلد از جلد واپس آئیں گے۔ 🌟',
-      engineer_prompt: '✅ آپ کی درخواست ہمارے انجینئری واحد کے لیے موصول ہوگئی۔ براہ کرم اپنا CV (PDF) ایٹیچ کریں۔ یا بغیر فائل کے آگے بڑھنے کے لئے **تم** لکھیں۔\n0️⃣ للرجوع وتغيير اللغة / Go Back',
+      engineer_prompt: '✅ آپ کی درخواست ہمارے انجینئری واحد کے لیے موصول ہوگئی۔ براہ کرم اپنا CV (PDF) ایٹیچ کریں۔ یا بغیر فائل کے آگے بڑھنے کے لئے **تم** لکھیں۔',
       worker_prompt: '✅ آپ کی صلاحیت کے لئے براہ کرم اپنے پچھلے کام کی تصاویر یا ویڈیو ایڈیٹ کریں۔ یا بغیر فائل کے آگے بڑھنے کے لئے **تم** لکھیں۔'
     },
     summary: `✅ آپ کا درخواست برائے موصول!\n📋 درج شدہ تفصیلات:\n• نام: {name}\n• موبائل: {phone}\n• تفصیلات: {details}\n\n📞 ہمارا فون: +966 543120557\n🕐 ہم 24 گھنٹے کے اندر آپ سے رابطے کریں گے۔\nسینڈ پوائنٹ گلوبل پر بھروسے کے لئے شکریہ 🌟\n\n📝 مرکزی مینو کے لیے **9** لکھیں یا سیمیل رابطے کیلئے **0** لکچیں...`,
@@ -550,8 +550,8 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
       invalid_name: '❌ नाम धेरै छोटो छ। आफ्नो पूरा नाम लिख्नुहोस्:',
       invalid_profession: '❌ एक वैध पेशा चुन्नुहोस्: इन्जिनियर, टेक्निशियन, वा मजदुर।',
       thank_you: 'स्यान्ड पोइंट ग्लोबललाई सम्पर्क गर्नुभएकोमा धन्यवाद। हामीले तपाईंको सन्देश प्राप्त गरेका छौं र अर्को समयमा फर्किनेछौं। 🌟',
-      engineer_prompt: '✅ तपाईंको आवेदन हाम्रो इन्जिनियरिङ विभागमा पुग्नेछ। कृपया आफ्नो CV (PDF) संलग्न गर्नुहोस्। वा फाइल बिना अगाडि बढ्न **done** लेख्नुहोस्।\n0️⃣ फिर्ता / Go Back',
-      worker_prompt: '✅ तपाईंको क्षमता मूल्यांकन गर्न हामीलाई तपाईंको अघिल्लो कामका फोटो वा भिडियो चाहिए। वा फाइल बिना अगाडि बढ्न **done** लेख्नुहोस्।\n0️⃣ फिर्ता / Go Back'
+      engineer_prompt: '✅ तपाईंको आवेदन हाम्रो इन्जिनियरिङ विभागमा पुग्नेछ। कृपया आफ्नो CV (PDF) संलग्न गर्नुहोस्। वा फाइल बिना अगाडि बढ्न **done** लेख्नुहोस्।',
+      worker_prompt: '✅ तपाईंको क्षमता मूल्यांकन गर्न हामीलाई तपाईंको अघिल्लो कामका फोटो वा भिडियो चाहिए। वा फाइल बिना अगाडि बढ्न **done** लेख्नुहोस्।'
     },
     summary: `✅ तपाईंको अनुरोध सफलतापूर्वक प्राप्त भयो!\n📋 दर्ता विवरण:\n• नाम: {name}\n• मोबाइल: {phone}\n• विवरण: {details}\n\n📞 हाम्रो फोन: +966 543120557\n🕐 हामीले 24 घण्टाभित्र तपाईंसँग सम्पर्क गर्नेछौं।\nस्यान्ड पोइंट ग्लोबलमा विश्वास गर्नुभएकोमा धन्यवाद 🌟\n\n📝 मुख्य मेनुमा फर्कन **9** लेख्नुहोस् वा सम्पर्क **0** लिख्नुहोस्...`,
     menuTitle: '📋 सेवा मेनु - स्यान्ड पोइंट ग्लोबल',
@@ -660,8 +660,8 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
       invalid_name: '❌ নাম খুবই ছোট। আপনার পূর্ণ নাম লিখুন:',
       invalid_profession: '❌ একটি বৈধ পেশা নির্বাচন করুন: ইঞ্জিনিয়ার, টেকনিসিয়ান, বা মজুর।',
       thank_you: 'স্যান্ড পয়েন্ট গ্লোবাল-এর সাথে যোগাযোগের জন্য ধন্যবাদ। আমরা আপনার বার্তাটি পেয়েছি এবং শীঘ্রই ফিরে যাব। 🌟',
-      engineer_prompt: '✅ আপনার আবেদনটি আমাদের ইঞ্জিনিয়ারিং বিভাগে পাঠানো হবে। অনুগ্রহ করে আপনার CV (PDF) সংযুক্ত করুন। অথবা ফাইল ছাড়া চালিয়ে জানতে **done** লিখুন।\n0️⃣ ফিরতি / Go Back',
-      worker_prompt: '✅ আপনার দক্ষতা মূল্যায়ন করতে অনুগ্রহ করে আপনার পূর্বের কাজের ছবি বা ভিডিও সংযুক্ত করুন। অথবা ফাইল ছাড়া চালিয়ে জানতে **done** লিখুন।\n0️⃣ ফিরতি / Go Back'
+      engineer_prompt: '✅ আপনার আবেদনটি আমাদের ইঞ্জিনিয়ারিং বিভাগে পাঠানো হবে। অনুগ্রহ করে আপনার CV (PDF) সংযুক্ত করুন। অথবা ফাইল ছাড়া চালিয়ে জানতে **done** লিখুন।',
+      worker_prompt: '✅ আপনার দক্ষতা মূল্যায়ন করতে অনুগ্রহ করে আপনার পূর্বের কাজের ছবি বা ভিডিও সংযুক্ত করুন। অথবা ফাইল ছাড়া চালিয়ে জানতে **done** লিখুন।'
     },
     summary: `✅ আপনার অনুরোধটি সফলভাবে গৃহীত হয়েছে!\n📋 রেজিস্টার করা বিবরণী:\n• নাম: {name}\n• মোবাইল: {phone}\n• বিবরণী: {details}\n\n📞 আমাদের ফোন: +966 543120557\n🕐 আমরা 24 ঘণ্টার মধ্যে আপনার সাথে যুক্ত হব।\nস্যান্ড পয়েন্ট গ্লোবাল-এ আপনার বিশ্বাসের জন্য ধন্যবাদ 🌟\n\n📝 মূল মেনুতে ফিরতি **9** লিখুন বা সরাসরি যোগাযোগ **0** লিখুন...`,
     menuTitle: '📋 সেবা মেনু - স্যান্ড পয়েন্ট গ্লোবাল',
@@ -770,8 +770,8 @@ Saturday - Thursday: 7:30 AM - 3:30 PM | Friday: Closed
       invalid_name: '❌ नाम बहुत छोटा है। अपना पूरा नाम लिखें:',
       invalid_profession: '❌ एक वैध पेशा चुनें: इंजीनियर, टेक्नीशियन, या मजदूर।',
       thank_you: 'सैंड पॉइंट ग्लोबल से संपर्क करने के लिए धन्यवाद। हमने आपका संदेश प्राप्त कर लिया है और जल्द ही उत्तर देंगे। 🌟',
-      engineer_prompt: '✅ आपका आवेदन हमारे इंजीनियरिंग विभाग के पास पहुंचेगा। कृपया अपना CV (PDF) संलग्न करें। या बिना फ़ाइल के आगे बढ़ने के लिए **done** लिखें।\n0️⃣ वापसी / Go Back',
-      worker_prompt: '✅ आपकी प्रतिभा का मूल्यांकन करने के लिए कृपया अपने पिछले काम की तस्वीरें या वीडियो संलग्न करें। या बिना फ़ाइल के आगे बढ़ने के लिए **done** लिखें।\n0️⃣ वापसी / Go Back'
+      engineer_prompt: '✅ आपका आवेदन हमारे इंजीनियरिंग विभाग के पास पहुंचेगा। कृपया अपना CV (PDF) संलग्न करें। या बिना फ़ाइल के आगे बढ़ने के लिए **done** लिखें।',
+      worker_prompt: '✅ आपकी प्रतिभा का मूल्यांकन करने के लिए कृपया अपने पिछले काम की तस्वीरें या वीडियो संलग्न करें। या बिना फ़ाइल के आगे बढ़ने के लिए **done** लिखें।'
     },
     summary: `✅ आपका अनुरोध सफलतापूर्वक प्राप्त हो गया!\n📋 दर्ज विवरण:\n• नाम: {name}\n• मोबाइल: {phone}\n• विवरण: {details}\n\n📞 हमारा फ़ोन: +966 543120557\n🕐 हम 24 घंटे के भीतर आपसे संपर्क करेंगे।\nसैंड पॉइंट ग्लोबल पर भरोसेमंद होने के लिए धन्यवाद 🌟\n\n📝 मुख्य मेन्यू में वापसी हेतु **9** लिखें या संपर्क **0** लिखें...`,
     menuTitle: '📋 सेवा मेन्यू - सैंड पॉइंट ग्लोबल',
@@ -880,8 +880,9 @@ Biyernes - Sabado: Sarado
       invalid_name: '❌ Masyadong maikli ang pangalan. Paksulat ang iyong buong pangalan:',
       invalid_profession: '❌ Pakpili ng isang wastong propesyon: Inhenyero, Tekniko, o Manggagawa.',
       thank_you: 'Salamat sa pakikipag-ugnayan sa Sand Point Global. Makikipag-ugnayan ang aming koponan. 🌟',
-      engineer_prompt: '✅ Ang iyong application ay isusuri ng aming engineering departamento. Paki-attach ang iyong CV (PDF). O i-type **done** kung wala kang file.\n0️⃣ Bumalik / Go Back',
-      worker_prompt: '✅ Upang masuri ang kompetensya mo, pakisamang mga litrato o video ng iyong nakaraang trabaho. O i-type **done** kung wala kang file.\n0️⃣ Bumalik / Go Back'    },
+      engineer_prompt: '✅ Ang iyong application ay isusuri ng aming engineering departamento. Paki-attach ang iyong CV (PDF). O i-type **done** kung wala kang file.',
+      worker_prompt: '✅ Upang masuri ang kompetensya mo, pakisamang mga litrato o video ng iyong nakaraang trabaho. O i-type **done** kung wala kang file.'
+    },
     summary: `✅ Natanggap ang iyong kahilingan!\n📋 Detalye:\n• Pangalan: {name}\n• Mobile: {phone}\n• Detalye: {details}\n\n📞 Telepono namin: +966 543120557\n🕐 Makikipag-ugnayan kami sa loob ng 24 na oras.\nSalamat sa tiwala sa Sand Point Global 🌟\n\n📝 I-to **9** para sa pangunahing menu o **0** para sa direkta makikipag-ugnayan...`,
     menuTitle: '📋 Serbisyong Menu - Sand Point Global',
     menuOptions: [
