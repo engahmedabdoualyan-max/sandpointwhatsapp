@@ -9,8 +9,9 @@
     "dev": "node --watch index.js"
   },
   "dependencies": {
-    "@whiskeysockets/baileys": "^6.7.0",
+    "@whiskeysockets/baileys": "6.7.24",
     "dotenv": "^16.3.1",
+    "mongodb": "^7.5.0",
     "qrcode": "^1.5.4"
   }
 }

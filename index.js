@@ -1,4 +1,14 @@
-import { default as makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } from '@whiskeysockets/baileys';
+import {
+  default as makeWASocket,
+  useMultiFileAuthState,
+  DisconnectReason,
+  fetchLatestBaileysVersion,
+  proto,
+  initAuthCreds,
+  BufferJSON,
+  makeCacheableSignalKeyStore
+} from '@whiskeysockets/baileys';
+import { MongoClient } from 'mongodb';
 import { readFileSync, writeFileSync, existsSync, rmSync } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
@@ -115,7 +125,11 @@ async function sendHumanLikeMessage(sock, userId, message, options = {}) {
     await sock.sendPresenceUpdate('composing', userId);
   } catch (e) {}
   await humanDelay();
-  await sock.sendMessage(userId, { text: message, ...options });
+  try {
+    await sock.sendMessage(userId, { text: message, ...options });
+  } catch (e) {
+    console.error('❌ sendHumanLikeMessage failed:', e.message);
+  }
 }
 
 async function sendImageMessage(sock, userId, imagePath, caption = '') {
@@ -123,12 +137,16 @@ async function sendImageMessage(sock, userId, imagePath, caption = '') {
     await sock.sendPresenceUpdate('composing', userId);
   } catch (e) {}
   await humanDelay();
-  if (!existsSync(imagePath)) {
-    await sock.sendMessage(userId, { text: caption });
-    return;
+  try {
+    if (!existsSync(imagePath)) {
+      await sock.sendMessage(userId, { text: caption });
+      return;
+    }
+    const imageBuffer = readFileSync(imagePath);
+    await sock.sendMessage(userId, { image: imageBuffer, caption });
+  } catch (e) {
+    console.error('❌ sendImageMessage failed:', e.message);
   }
-  const imageBuffer = readFileSync(imagePath);
-  await sock.sendMessage(userId, { image: imageBuffer, caption });
 }
 
 async function sendDocumentMessage(sock, userId, docPath, fileName, caption = '') {
@@ -136,12 +154,16 @@ async function sendDocumentMessage(sock, userId, docPath, fileName, caption = ''
     await sock.sendPresenceUpdate('composing', userId);
   } catch (e) {}
   await humanDelay();
-  if (!existsSync(docPath)) {
-    await sock.sendMessage(userId, { text: caption || '📎 تواصل مع الدعم للحصول على الملف' });
-    return;
+  try {
+    if (!existsSync(docPath)) {
+      await sock.sendMessage(userId, { text: caption || '📎 تواصل مع الدعم للحصول على الملف' });
+      return;
+    }
+    const docBuffer = readFileSync(docPath);
+    await sock.sendMessage(userId, { document: docBuffer, fileName });
+  } catch (e) {
+    console.error('❌ sendDocumentMessage failed:', e.message);
   }
-  const docBuffer = readFileSync(docPath);
-  await sock.sendMessage(userId, { document: docBuffer, fileName });
 }
 
 const LANG_MESSAGES = {
@@ -944,7 +966,11 @@ async function sendListMessage(sock, userId, text, title, sections) {
   }
   body += '\n\n📝 اكتب رقم الاختيار / Type the number';
 
-  await sock.sendMessage(userId, { text: body });
+  try {
+    await sock.sendMessage(userId, { text: body });
+  } catch (e) {
+    console.error('❌ sendListMessage failed:', e.message);
+  }
 }
 
 async function sendLanguageList(sock, userId) {
@@ -964,7 +990,11 @@ async function sendLanguageList(sock, userId) {
     '7️⃣ 🇵🇭 Tagalog (Filipino)\n\n' +
     '📝 اكتب رقم اللغة / Type the number';
 
-  await sock.sendMessage(userId, { text: body });
+  try {
+    await sock.sendMessage(userId, { text: body });
+  } catch (e) {
+    console.error('❌ sendLanguageList failed:', e.message);
+  }
 }
 
 async function sendWelcomeBundle(sock, userId) {
@@ -990,10 +1020,26 @@ async function sendProfessionList(sock, userId, t, userState) {
     '3️⃣ ' + (lang === 'ar' ? '👷 عامل' : '👷 Worker') + ' - ' + (lang === 'ar' ? 'عامل بناء أو نجار' : 'Construction Worker or Carpenter') + '\n\n' +
     '0️⃣ للرجوع وتغيير اللغة / Go Back';
 
-  await sock.sendMessage(userId, { text: body });
+  try {
+    await sock.sendMessage(userId, { text: body });
+  } catch (e) {
+    console.error('❌ sendProfessionList failed:', e.message);
+  }
 }
 
 async function handleMessage(sock, m) {
+  try {
+    return await handleMessageInner(sock, m);
+  } catch (err) {
+    console.error('💥 handleMessage error:', err.message);
+    try {
+      const userId = m.key.remoteJid;
+      await sock.sendMessage(userId, { text: '⚠️ حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى. / An unexpected error occurred, please try again.' });
+    } catch (e) {}
+  }
+}
+
+async function handleMessageInner(sock, m) {
   if (!m.message) return;
   
   const userId = m.key.remoteJid;
@@ -1267,6 +1313,92 @@ async function handleMessage(sock, m) {
  }
 
 let currentQrData = null;
+let mongoClient = null;
+let authCollection = null;
+
+// MongoDB-backed auth state (mirrors useMultiFileAuthState but persistent across restarts)
+async function useMongoAuthState(collection) {
+  const writeData = async (id, data) => {
+    await collection.updateOne(
+      { _id: id },
+      { $set: { data: JSON.stringify(data, BufferJSON.replacer) } },
+      { upsert: true }
+    );
+  };
+  const readData = async (id) => {
+    try {
+      const doc = await collection.findOne({ _id: id });
+      return doc ? JSON.parse(doc.data, BufferJSON.reviver) : null;
+    } catch (e) {
+      return null;
+    }
+  };
+  const removeData = async (id) => {
+    try {
+      await collection.deleteOne({ _id: id });
+    } catch (e) {}
+  };
+
+  const creds = (await readData('creds')) || initAuthCreds();
+
+  const keys = {
+    async get(type, ids) {
+      const data = {};
+      await Promise.all(ids.map(async (id) => {
+        let value = await readData(`${type}-${id}`);
+        if (type === 'app-state-sync-key' && value) {
+          value = proto.Message.AppStateSyncKeyData.fromObject(value);
+        }
+        data[id] = value;
+      }));
+      return data;
+    },
+    async set(data) {
+      const tasks = [];
+      for (const category in data) {
+        for (const id in data[category]) {
+          const value = data[category][id];
+          const key = `${category}-${id}`;
+          tasks.push(value ? writeData(key, value) : removeData(key));
+        }
+      }
+      await Promise.all(tasks);
+    }
+  };
+
+  return {
+    state: { creds, keys: makeCacheableSignalKeyStore(keys) },
+    saveCreds: async () => writeData('creds', creds),
+    clearState: async () => {
+      try {
+        await collection.deleteMany({ _id: { $ne: 'creds' } });
+      } catch (e) {}
+    }
+  };
+}
+
+async function getAuthState() {
+  const mongoUri = process.env.MONGODB_URI;
+  if (mongoUri) {
+    try {
+      if (!mongoClient) {
+        mongoClient = new MongoClient(mongoUri, {
+          serverSelectionTimeoutMS: 20000,
+          connectTimeoutMS: 20000
+        });
+        await mongoClient.connect();
+        console.log('🗄️ MongoDB session storage: connected');
+      }
+      if (!authCollection) {
+        authCollection = mongoClient.db().collection('wa_sessions');
+      }
+      return await useMongoAuthState(authCollection);
+    } catch (err) {
+      console.error('❌ MongoDB connection failed, falling back to local storage:', err.message);
+    }
+  }
+  return await useMultiFileAuthState(join(__dirname, 'auth_info'));
+}
 
 // رموز إعادة الاتصال المتوقعة
 const DISCONNECT_CODES = {
@@ -1295,7 +1427,7 @@ async function connectToWhatsApp() {
   try {
     console.log('\n🔄 Starting WhatsApp connection (QR mode)...');
 
-    const { state, saveCreds } = await useMultiFileAuthState(join(__dirname, 'auth_info'));
+    const { state, saveCreds, clearState } = await getAuthState();
 
     const { version, isLatest } = await fetchLatestBaileysVersion();
     console.log("Baileys version: " + version.join(".") + " - Latest: " + isLatest);
@@ -1312,7 +1444,7 @@ async function connectToWhatsApp() {
       qrTimeout: 60000
     });
 
-    sock.ev.on('connection.update', (update) => {
+    sock.ev.on('connection.update', async (update) => {
       const { connection, lastDisconnect, qr } = update;
 
       if (qr) {
@@ -1350,8 +1482,13 @@ async function connectToWhatsApp() {
         if (codesRequiringReset.includes(statusCode)) {
           console.log('🗑️  Clearing session for code ' + statusCode + '...');
           try {
-            rmSync(join(__dirname, 'auth_info'), { recursive: true, force: true });
-            console.log('✅ auth_info cleared');
+            if (process.env.MONGODB_URI) {
+              await clearState();
+              console.log('✅ MongoDB session cleared');
+            } else {
+              rmSync(join(__dirname, 'auth_info'), { recursive: true, force: true });
+              console.log('✅ auth_info cleared');
+            }
           } catch (cleanupErr) {
             console.log('⚠️ Cleanup error:', cleanupErr.message);
           }
@@ -1369,19 +1506,26 @@ async function connectToWhatsApp() {
       }
     });
 
-    sock.ev.on('creds.update', saveCreds);
+    sock.ev.on('creds.update', () => {
+      saveCreds().catch(e => console.log('⚠️ Failed to save creds:', e.message));
+    });
 
     sock.ev.on('messages.upsert', async ({ messages, type }) => {
       // Only process notify messages (user messages), ignore status updates
       if (type !== 'notify') return;
       
       for (const m of messages) {
-        if (!m.key.fromMe && m.message) {
-          // Strict de-duplication: trace message IDs to prevent double replies
-          const msgId = m.key.id;
-          if (!msgId || isDuplicate(msgId)) continue;
-          
-          await handleMessage(sock, m);
+        try {
+          if (!m.key.fromMe && m.message) {
+            // Strict de-duplication: trace message IDs to prevent double replies
+            const msgId = m.key.id;
+            if (!msgId || isDuplicate(msgId)) continue;
+            
+            await handleMessage(sock, m);
+          }
+        } catch (err) {
+          console.error('💥 Error handling message:', err.message);
+          console.error(err.stack);
         }
       }
     });

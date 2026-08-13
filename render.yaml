@@ -9,5 +9,7 @@ services:
         value: production
       - key: WA_PHONE_NUMBER
         value: +966543120557
+      - key: MONGODB_URI
+        sync: false
     plan: free
     autoDeploy: true
