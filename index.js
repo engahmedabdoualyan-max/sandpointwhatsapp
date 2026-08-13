@@ -1376,13 +1376,14 @@ async function getAuthState() {
   return await useMultiFileAuthState(join(__dirname, 'auth_info'));
 }
 
-// رموز إعادة الاتصال المتوقعة
+// رموز إعادة الاتصال المتوقعة (مطابقة لأرقام baileys 6.7.24)
 const DISCONNECT_CODES = {
-  BAD_SESSION: 401,
-  TOKEN_EXPIRED: 419,
-  MULTI_DEVICE_MISMATCH: 217,
-  RESTART_REQUIRED: 216,
+  BAD_SESSION: 500,
+  TOKEN_EXPIRED: 401,
+  MULTI_DEVICE_MISMATCH: 411,
+  RESTART_REQUIRED: 515,
   FORBIDDEN: 403,
+  CONNECTION_REPLACED: 440
 };
 
 // دالة اختيار متصفح عشوائي
@@ -1521,10 +1522,10 @@ async function connectToWhatsApp() {
         // Codes requiring session reset
         const codesRequiringReset = [
           DisconnectReason.loggedOut,
-          DISCONNECT_CODES.TOKEN_EXPIRED,
-          DISCONNECT_CODES.MULTI_DEVICE_MISMATCH,
-          DISCONNECT_CODES.RESTART_REQUIRED,
-          DISCONNECT_CODES.FORBIDDEN
+          DisconnectReason.badSession,
+          DisconnectReason.multideviceMismatch,
+          DisconnectReason.restartRequired,
+          DisconnectReason.forbidden
         ];
 
         if (codesRequiringReset.includes(statusCode)) {
