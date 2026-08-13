@@ -1657,6 +1657,20 @@ function startServer() {
     } else if (req.url === '/' || req.url === '/health') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ status: 'running', service: 'SAND POINT GLOBAL WhatsApp Bot', qr_available: !!currentQrData }));
+    } else if (req.url === '/status') {
+      const registered = !!activeSock?.user;
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        status: 'running',
+        connected: !!activeSock && isSockAlive(activeSock),
+        logged_in: registered,
+        qr_available: !!currentQrData,
+        socket_alive: !!activeSock && isSockAlive(activeSock),
+        session_storage: process.env.MONGODB_URI ? 'mongo' : 'local-files',
+        mongo_uri_set: !!process.env.MONGODB_URI,
+        send_failures: consecutiveSendFailures,
+        uptime_seconds: Math.round(process.uptime())
+      }));
     } else {
       res.writeHead(404, { 'Content-Type': 'text/plain' });
       res.end('Not Found');
