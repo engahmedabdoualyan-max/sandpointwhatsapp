@@ -118,20 +118,30 @@ async function humanDelay() {
   return new Promise(resolve => setTimeout(resolve, delay));
 }
 
+// Ensure NO promise hangs forever - the #1 reason the bot "tries but can't reply"
+function withTimeout(promise, ms, label) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT: ' + label + ' (' + ms + 'ms)')), ms))
+  ]);
+}
+
+async function safePresence(sock, jid) {
+  try {
+    await withTimeout(sock.sendPresenceUpdate('composing', jid), 5000, 'presence');
+  } catch (e) {}
+}
+
 // Track message IDs for de-duplication in the listener
 
 async function sendHumanLikeMessage(sock, userId, message, options = {}) {
-  try {
-    await sock.sendPresenceUpdate('composing', userId);
-  } catch (e) {}
+  await safePresence(sock, userId);
   await humanDelay();
   await sendWithRetry(sock, userId, { text: message, ...options });
 }
 
 async function sendImageMessage(sock, userId, imagePath, caption = '') {
-  try {
-    await sock.sendPresenceUpdate('composing', userId);
-  } catch (e) {}
+  await safePresence(sock, userId);
   await humanDelay();
   if (!existsSync(imagePath)) {
     await sendWithRetry(sock, userId, { text: caption });
@@ -142,9 +152,7 @@ async function sendImageMessage(sock, userId, imagePath, caption = '') {
 }
 
 async function sendDocumentMessage(sock, userId, docPath, fileName, caption = '') {
-  try {
-    await sock.sendPresenceUpdate('composing', userId);
-  } catch (e) {}
+  await safePresence(sock, userId);
   await humanDelay();
   if (!existsSync(docPath)) {
     await sendWithRetry(sock, userId, { text: caption || '📎 تواصل مع الدعم للحصول على الملف' });
@@ -935,9 +943,7 @@ const LANG_CODES = {
 };
 
 async function sendListMessage(sock, userId, text, title, sections) {
-  try {
-    await sock.sendPresenceUpdate('composing', userId);
-  } catch (e) {}
+  await safePresence(sock, userId);
   await humanDelay();
 
   let body = '';
@@ -958,9 +964,7 @@ async function sendListMessage(sock, userId, text, title, sections) {
 }
 
 async function sendLanguageList(sock, userId) {
-  try {
-    await sock.sendPresenceUpdate('composing', userId);
-  } catch (e) {}
+  await safePresence(sock, userId);
   await humanDelay();
 
   const body =
@@ -986,9 +990,7 @@ async function sendWelcomeBundle(sock, userId) {
 }
 
 async function sendProfessionList(sock, userId, t, userState) {
-  try {
-    await sock.sendPresenceUpdate('composing', userId);
-  } catch (e) {}
+  await safePresence(sock, userId);
   await humanDelay();
 
   const lang = userState.language || 'en';
@@ -1430,13 +1432,22 @@ async function sendWithRetry(sock, jid, messageContent, retries = 2) {
     try {
       if (!isSockAlive(current)) {
         console.log('⚠️  Socket not alive (attempt ' + attempt + '), reconnecting...');
-        await reconnectNow();
+        await withTimeout(reconnectNow(), 30000, 'reconnect');
         continue;
       }
-      await current.sendMessage(jid, messageContent);
+      // 30s hard timeout - sendMessage must never hang forever
+      await withTimeout(current.sendMessage(jid, messageContent), 30000, 'sendMessage');
+      consecutiveSendFailures = 0;
       return true;
     } catch (e) {
-      console.error('❌ sendMessage attempt ' + attempt + ' failed: ' + e.message);
+      consecutiveSendFailures++;
+      console.error('❌ sendMessage attempt ' + attempt + ' failed (' + consecutiveSendFailures + 'x): ' + e.message);
+      if (consecutiveSendFailures >= SEND_FAILURE_RESET_THRESHOLD) {
+        console.log('🛠️  Too many consecutive send failures - resetting session automatically');
+        consecutiveSendFailures = 0;
+        await resetSessionAndReconnect();
+        return false;
+      }
       if (attempt < retries) {
         await new Promise(r => setTimeout(r, 3000));
       }
@@ -1446,12 +1457,35 @@ async function sendWithRetry(sock, jid, messageContent, retries = 2) {
 }
 
 let reconnectTimer = null;
+let consecutiveSendFailures = 0;
+const SEND_FAILURE_RESET_THRESHOLD = 5;
+
 function scheduleReconnect(delayMs) {
   if (reconnectTimer) clearTimeout(reconnectTimer);
   reconnectTimer = setTimeout(() => {
     reconnectTimer = null;
     connectToWhatsApp();
   }, delayMs);
+}
+
+async function resetSessionAndReconnect() {
+  console.log('🗑️  Session self-heal: resetting authentication...');
+  try {
+    if (process.env.MONGODB_URI && authCollection) {
+      await authCollection.deleteMany({});
+      console.log('✅ MongoDB session cleared');
+    } else {
+      rmSync(join(__dirname, 'auth_info'), { recursive: true, force: true });
+      console.log('✅ auth_info cleared');
+    }
+  } catch (err) {
+    console.log('⚠️ Session cleanup error:', err.message);
+  }
+  mongoClient = null;
+  authCollection = null;
+  stopSock(activeSock);
+  activeSock = null;
+  setTimeout(() => connectToWhatsApp(), 3000);
 }
 
 async function reconnectNow() {
@@ -1643,3 +1677,12 @@ loadUsers();
 console.log('🚀 بدء تشغيل بوت شركة ساند بوينت للمقاولات (7 لغات + مضادات حظر إنسانيات)...');
 startServer();
 connectToWhatsApp().catch(console.error);
+
+// NEVER let a single error kill the server silently (on free Render this = dead bot)
+process.on('uncaughtException', (err) => {
+  console.error('💥 uncaughtException:', err.message);
+  console.error(err.stack);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('💥 unhandledRejection:', reason?.message || reason);
+});
