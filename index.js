@@ -125,11 +125,7 @@ async function sendHumanLikeMessage(sock, userId, message, options = {}) {
     await sock.sendPresenceUpdate('composing', userId);
   } catch (e) {}
   await humanDelay();
-  try {
-    await sock.sendMessage(userId, { text: message, ...options });
-  } catch (e) {
-    console.error('❌ sendHumanLikeMessage failed:', e.message);
-  }
+  await sendWithRetry(sock, userId, { text: message, ...options });
 }
 
 async function sendImageMessage(sock, userId, imagePath, caption = '') {
@@ -137,16 +133,12 @@ async function sendImageMessage(sock, userId, imagePath, caption = '') {
     await sock.sendPresenceUpdate('composing', userId);
   } catch (e) {}
   await humanDelay();
-  try {
-    if (!existsSync(imagePath)) {
-      await sock.sendMessage(userId, { text: caption });
-      return;
-    }
-    const imageBuffer = readFileSync(imagePath);
-    await sock.sendMessage(userId, { image: imageBuffer, caption });
-  } catch (e) {
-    console.error('❌ sendImageMessage failed:', e.message);
+  if (!existsSync(imagePath)) {
+    await sendWithRetry(sock, userId, { text: caption });
+    return;
   }
+  const imageBuffer = readFileSync(imagePath);
+  await sendWithRetry(sock, userId, { image: imageBuffer, caption });
 }
 
 async function sendDocumentMessage(sock, userId, docPath, fileName, caption = '') {
@@ -154,16 +146,12 @@ async function sendDocumentMessage(sock, userId, docPath, fileName, caption = ''
     await sock.sendPresenceUpdate('composing', userId);
   } catch (e) {}
   await humanDelay();
-  try {
-    if (!existsSync(docPath)) {
-      await sock.sendMessage(userId, { text: caption || '📎 تواصل مع الدعم للحصول على الملف' });
-      return;
-    }
-    const docBuffer = readFileSync(docPath);
-    await sock.sendMessage(userId, { document: docBuffer, fileName });
-  } catch (e) {
-    console.error('❌ sendDocumentMessage failed:', e.message);
+  if (!existsSync(docPath)) {
+    await sendWithRetry(sock, userId, { text: caption || '📎 تواصل مع الدعم للحصول على الملف' });
+    return;
   }
+  const docBuffer = readFileSync(docPath);
+  await sendWithRetry(sock, userId, { document: docBuffer, fileName });
 }
 
 const LANG_MESSAGES = {
@@ -966,11 +954,7 @@ async function sendListMessage(sock, userId, text, title, sections) {
   }
   body += '\n\n📝 اكتب رقم الاختيار / Type the number';
 
-  try {
-    await sock.sendMessage(userId, { text: body });
-  } catch (e) {
-    console.error('❌ sendListMessage failed:', e.message);
-  }
+  await sendWithRetry(sock, userId, { text: body });
 }
 
 async function sendLanguageList(sock, userId) {
@@ -990,11 +974,7 @@ async function sendLanguageList(sock, userId) {
     '7️⃣ 🇵🇭 Tagalog (Filipino)\n\n' +
     '📝 اكتب رقم اللغة / Type the number';
 
-  try {
-    await sock.sendMessage(userId, { text: body });
-  } catch (e) {
-    console.error('❌ sendLanguageList failed:', e.message);
-  }
+  await sendWithRetry(sock, userId, { text: body });
 }
 
 async function sendWelcomeBundle(sock, userId) {
@@ -1020,11 +1000,7 @@ async function sendProfessionList(sock, userId, t, userState) {
     '3️⃣ ' + (lang === 'ar' ? '👷 عامل' : '👷 Worker') + ' - ' + (lang === 'ar' ? 'عامل بناء أو نجار' : 'Construction Worker or Carpenter') + '\n\n' +
     '0️⃣ للرجوع وتغيير اللغة / Go Back';
 
-  try {
-    await sock.sendMessage(userId, { text: body });
-  } catch (e) {
-    console.error('❌ sendProfessionList failed:', e.message);
-  }
+  await sendWithRetry(sock, userId, { text: body });
 }
 
 async function handleMessage(sock, m) {
@@ -1034,7 +1010,7 @@ async function handleMessage(sock, m) {
     console.error('💥 handleMessage error:', err.message);
     try {
       const userId = m.key.remoteJid;
-      await sock.sendMessage(userId, { text: '⚠️ حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى. / An unexpected error occurred, please try again.' });
+      await sendWithRetry(sock, userId, { text: '⚠️ حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى. / An unexpected error occurred, please try again.' });
     } catch (e) {}
   }
 }
@@ -1423,7 +1399,71 @@ function getRandomBrowser() {
     : browsers[Math.floor(Math.random() * browsers.length)];
 }
 
+// Track only ONE active socket - prevents duplicate/conflicting connections
+let activeSock = null;
+
+function isSockAlive(sock) {
+  try {
+    if (!sock) return false;
+    // WebSocket OPEN state = 1
+    return sock.ws?.readyState === 1;
+  } catch (e) {
+    return false;
+  }
+}
+
+function stopSock(sock) {
+  if (!sock) return;
+  try {
+    sock.ev?.removeAllListeners?.();
+    sock.end?.();
+    sock.ws?.close?.();
+  } catch (e) {}
+}
+
+// Send message with retry - if the socket died, force a reconnect then retry
+async function sendWithRetry(sock, jid, messageContent, retries = 2) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    // Always use the current active socket (may have been replaced by a reconnect)
+    const current = (activeSock && activeSock !== sock) ? activeSock : sock;
+    try {
+      if (!isSockAlive(current)) {
+        console.log('⚠️  Socket not alive (attempt ' + attempt + '), reconnecting...');
+        await reconnectNow();
+        continue;
+      }
+      await current.sendMessage(jid, messageContent);
+      return true;
+    } catch (e) {
+      console.error('❌ sendMessage attempt ' + attempt + ' failed: ' + e.message);
+      if (attempt < retries) {
+        await new Promise(r => setTimeout(r, 3000));
+      }
+    }
+  }
+  return false;
+}
+
+let reconnectTimer = null;
+function scheduleReconnect(delayMs) {
+  if (reconnectTimer) clearTimeout(reconnectTimer);
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = null;
+    connectToWhatsApp();
+  }, delayMs);
+}
+
+async function reconnectNow() {
+  stopSock(activeSock);
+  activeSock = null;
+  await connectToWhatsApp();
+}
+
 async function connectToWhatsApp() {
+  // Only one connection at a time - kill any existing socket first
+  stopSock(activeSock);
+  activeSock = null;
+
   try {
     console.log('\n🔄 Starting WhatsApp connection (QR mode)...');
 
@@ -1437,12 +1477,17 @@ async function connectToWhatsApp() {
     const sock = makeWASocket({
       version,
       auth: state,
+      shouldSyncHistoryMessage: () => false,
+      syncFullHistory: false,
+      markOnlineOnConnect: true,
       printQRInTerminal: false,
       browser: ['SAND POINT Bot', browser[0], browser[1]],
       defaultQueryTimeoutMs: 60000,
       connectTimeoutMs: 60000,
       qrTimeout: 60000
     });
+
+    activeSock = sock;
 
     sock.ev.on('connection.update', async (update) => {
       const { connection, lastDisconnect, qr } = update;
@@ -1467,6 +1512,9 @@ async function connectToWhatsApp() {
       }
 
       if (connection === 'close') {
+        // This socket is dead - clear it BEFORE reconnecting
+        if (activeSock === sock) activeSock = null;
+
         const statusCode = lastDisconnect?.error?.output?.statusCode;
         console.log('\n❌ Disconnected (code: ' + statusCode + '):', lastDisconnect?.error?.message);
 
@@ -1492,16 +1540,11 @@ async function connectToWhatsApp() {
           } catch (cleanupErr) {
             console.log('⚠️ Cleanup error:', cleanupErr.message);
           }
-          setTimeout(() => {
-            console.log('🔄 Restarting with fresh session...\n');
-            connectToWhatsApp();
-          }, 15000);
+          scheduleReconnect(15000);
         } else {
           // Transient errors - keep session and reconnect
           console.log('🔄 Reconnecting in 8s (keeping session)...\n');
-          setTimeout(() => {
-            connectToWhatsApp();
-          }, 8000);
+          scheduleReconnect(8000);
         }
       }
     });
@@ -1513,6 +1556,8 @@ async function connectToWhatsApp() {
     sock.ev.on('messages.upsert', async ({ messages, type }) => {
       // Only process notify messages (user messages), ignore status updates
       if (type !== 'notify') return;
+      // Ignore events from stale sockets - only the current active one responds
+      if (activeSock !== sock) return;
       
       for (const m of messages) {
         try {
