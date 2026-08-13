@@ -1291,6 +1291,8 @@ async function handleMessageInner(sock, m) {
  }
 
 let currentQrData = null;
+let qrGeneratedAt = null;
+let lastDisconnectInfo = null;
 let mongoClient = null;
 let authCollection = null;
 
@@ -1532,6 +1534,7 @@ async function connectToWhatsApp() {
           QRCode.toDataURL(qr, { width: 256, margin: 2, color: { dark: '#000', light: '#fff' } })
             .then(qrImageDataUrl => {
               currentQrData = qrImageDataUrl;
+              qrGeneratedAt = Date.now();
               console.log('\n📱 Open QR scanner at: ' + (process.env.RENDER_EXTERNAL_URL || 'http://localhost:' + (process.env.PORT || 3000)) + '/qr\n');
             })
             .catch(e => console.log('\n❌ QR generation error:', e.message));
@@ -1544,6 +1547,7 @@ async function connectToWhatsApp() {
         console.log('\n✅ Connected to WhatsApp with browser: ' + browser[0]);
         console.log('🤖 Bot ready (7 languages + anti-ban protection)...\n');
         currentQrData = null;
+        qrGeneratedAt = null;
       }
 
       if (connection === 'close') {
@@ -1552,6 +1556,11 @@ async function connectToWhatsApp() {
 
         const statusCode = lastDisconnect?.error?.output?.statusCode;
         console.log('\n❌ Disconnected (code: ' + statusCode + '):', lastDisconnect?.error?.message);
+        lastDisconnectInfo = { code: statusCode, message: lastDisconnect?.error?.message, at: new Date().toISOString() };
+
+        // The QR displayed on /qr is now DEAD - clear it so clients never scan a stale code
+        currentQrData = null;
+        qrGeneratedAt = null;
 
         // Codes requiring session reset
         const codesRequiringReset = [
@@ -1659,7 +1668,7 @@ function startServer() {
       The QR code refreshes automatically every 10 seconds - wait for a fresh one before scanning.
       Each QR expires in ~20 seconds.
     </div>
-    <div class="updated">🔄 Refreshes automatically every 10 seconds • ${new Date().toLocaleTimeString()}</div>
+    <div class="updated">🔄 Refreshes automatically every 10 seconds • QR generated at ${new Date(qrGeneratedAt).toLocaleTimeString()} (${Math.floor((Date.now() - qrGeneratedAt) / 1000)}s ago)</div>
   </div>
 </body>
 </html>`);
@@ -1700,6 +1709,8 @@ function startServer() {
         session_storage: process.env.MONGODB_URI ? 'mongo' : 'local-files',
         mongo_uri_set: !!process.env.MONGODB_URI,
         send_failures: consecutiveSendFailures,
+        qr_age_seconds: currentQrData && qrGeneratedAt ? Math.floor((Date.now() - qrGeneratedAt) / 1000) : null,
+        last_disconnect: lastDisconnectInfo,
         uptime_seconds: Math.round(process.uptime())
       }));
     } else {
