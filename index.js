@@ -1629,6 +1629,7 @@ function startServer() {
 <html>
 <head><title>SAND POINT GLOBAL - WhatsApp QR Code</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="refresh" content="10">
 <style>
   body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background: #f5f5f5; }
   .container { max-width: 500px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
@@ -1636,6 +1637,8 @@ function startServer() {
   .qr-code { margin: 20px auto; display: flex; justify-content: center; }
   .instructions { margin-top: 20px; color: #555; font-size: 16px; line-height: 1.6; }
   .scan-icon { font-size: 24px; }
+  .warning { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px; margin: 15px 0; font-size: 14px; color: #856404; }
+  .updated { color: #999; font-size: 12px; margin-top: 15px; }
 </style>
 </head>
 <body>
@@ -1651,6 +1654,34 @@ function startServer() {
       <p>2. Go to Settings → WhatsApp Web/Desktop</p>
       <p>3. Tap "Scan QR Code" and scan this code</p>
     </div>
+    <div class="warning">
+      ⚠️ <strong>Important:</strong> Scan from a DIFFERENT phone.
+      The QR code refreshes automatically every 10 seconds - wait for a fresh one before scanning.
+      Each QR expires in ~20 seconds.
+    </div>
+    <div class="updated">🔄 Refreshes automatically every 10 seconds • ${new Date().toLocaleTimeString()}</div>
+  </div>
+</body>
+</html>`);
+    } else if (req.url === '/qr') {
+      // No QR yet - show waiting page that auto-refreshes
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(`<!DOCTYPE html>
+<html>
+<head><title>SAND POINT GLOBAL - WhatsApp QR Code</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="refresh" content="5">
+<style>
+  body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background: #f5f5f5; }
+  .container { max-width: 400px; margin: 60px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+  h1 { color: #25D36E; font-size: 22px; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>SAND POINT GLOBAL 🏗️</h1>
+    <p style="font-size:18px;">⏳ جاري تجهيز رمز QR... / Preparing QR code...</p>
+    <p style="color:#999;">سيتم التحديث تلقائياً / This page refreshes automatically</p>
   </div>
 </body>
 </html>`);
