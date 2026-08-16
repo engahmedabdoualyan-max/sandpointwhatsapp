@@ -1580,7 +1580,10 @@ async function connectToWhatsApp() {
       auth: state,
       shouldSyncHistoryMessage: () => false,
       syncFullHistory: false,
-      markOnlineOnConnect: true,
+      // markOnlineOnConnect sends presence immediately after pairing - this is the
+      // known cause of "Stream Errored (515)" right after a successful QR scan.
+      // Keep it off until the connection is fully established.
+      markOnlineOnConnect: false,
       printQRInTerminal: false,
       browser: ['SAND POINT Bot', browser[0], browser[1]],
       defaultQueryTimeoutMs: 60000,
@@ -1593,6 +1596,10 @@ async function connectToWhatsApp() {
     sock.ev.on('connection.update', async (update) => {
       const { connection, lastDisconnect, qr, isNewLogin } = update;
       log('📡 connection.update:', JSON.stringify({ connection, isNewLogin: isNewLogin ?? false, hasQr: !!qr }));
+
+      if (isNewLogin) {
+        log('🎉✅ QR SCANNED SUCCESSFULLY! Phone linked. Saving session...');
+      }
 
       if (qr) {
         log('🆕 New QR received from WhatsApp server');
@@ -1629,16 +1636,22 @@ async function connectToWhatsApp() {
         currentQrData = null;
         qrGeneratedAt = null;
 
-        // Codes requiring session reset
+        // Codes requiring session reset (session is truly dead - phone unlinked/rejected)
         const codesRequiringReset = [
           DisconnectReason.loggedOut,
           DisconnectReason.badSession,
           DisconnectReason.multideviceMismatch,
-          DisconnectReason.restartRequired,
           DisconnectReason.forbidden
         ];
 
-        if (codesRequiringReset.includes(statusCode)) {
+        // restartRequired (515) means: close and reconnect KEEPING the session -
+        // wiping it here creates an infinite scan->515->wipe->scan loop (seen in logs)
+        const isRestartRequired = statusCode === DisconnectReason.restartRequired;
+
+        if (isRestartRequired) {
+          log('🔁 Stream errored (515) - reconnecting NOW with the SAME session');
+          scheduleReconnect(2000);
+        } else if (codesRequiringReset.includes(statusCode)) {
           log('🗑️  Clearing session for code ' + statusCode + '...');
           try {
             if (process.env.MONGODB_URI) {
