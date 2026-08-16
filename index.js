@@ -78,6 +78,7 @@ function getUserState(userId) {
       language: null,
       category: null,
       profession: null,
+      trade: null,
       collect_step: 0,
       name: '',
       phone: '',
@@ -124,10 +125,10 @@ async function saveRegistrationToSheet(userId, userState) {
     wa_number: userId,
     language: SHEET_LANGUAGE_LABELS[userState.language] || userState.language || '',
     category: SHEET_CATEGORY_LABELS[userState.category] || userState.category || '',
-    profession: SHEET_PROFESSION_LABELS[userState.profession] || userState.profession || '',
+    profession: (SHEET_PROFESSION_LABELS[userState.profession] || userState.profession || '') + (userState.trade ? ' - ' + userState.trade : ''),
     name: userState.name || '',
     phone: userState.phone || '',
-    details: userState.details || userState.specialty || '',
+    details: userState.details || userState.specialty || userState.trade || '',
     files_count: (userState.files || []).length
   };
   try {
@@ -153,6 +154,7 @@ function resetUserState(userId) {
     language: null,
     category: null,
     profession: null,
+    trade: null,
     collect_step: 0,
     name: '',
     phone: '',
@@ -1056,6 +1058,24 @@ async function sendProfessionList(sock, userId, t, userState) {
   await sendWithRetry(sock, userId, { text: body });
 }
 
+async function sendTradeList(sock, userId, t, userState) {
+  await safePresence(sock, userId);
+  await humanDelay();
+
+  const lang = userState.language || 'en';
+  const body =
+    '💼 ' + (lang === 'ar' ? 'ماهي حرفتك؟' : 'What is your craft?') + '\n\n' +
+    '1️⃣ ' + (lang === 'ar' ? '🚿 سباك' : '🚿 Plumber') + '\n' +
+    '2️⃣ ' + (lang === 'ar' ? '🪚 نجار' : '🪚 Carpenter') + '\n' +
+    '3️⃣ ' + (lang === 'ar' ? '🧱 جبسنبورد' : '🧱 Gypsum Board') + '\n' +
+    '4️⃣ ' + (lang === 'ar' ? '🏗️ لياسة مبانى' : '🏗️ Building Plastering') + '\n' +
+    '5️⃣ ' + (lang === 'ar' ? '🪨 بلاط ورخام' : '🪨 Tiles and Marble') + '\n' +
+    '6️⃣ ' + (lang === 'ar' ? '📝 أخرى - اكتب حرفتك' : '📝 Other - type your craft') + '\n\n' +
+    '0️⃣ للرجوع وتغيير اللغة / Go Back';
+
+  await sendWithRetry(sock, userId, { text: body });
+}
+
 async function handleMessage(sock, m) {
   try {
     return await handleMessageInner(sock, m);
@@ -1215,12 +1235,68 @@ async function handleMessageInner(sock, m) {
     }
     
     if (profession) {
-      updateUserState(userId, { profession: profession, step: 'collect_name' });
-      await sendMsg(`✅ ${t.prompts.thank_you}\n${lang === 'ar' ? 'الآن نحتاج' : 'Now we need'}\n• ${t.prompts.name}\n• ${t.prompts.phone}\n📝 ${lang === 'ar' ? 'ابدأ بـ' : 'Start with'} **${t.prompts.name}**...\n\n${backOption}`);
+      if (profession === 'technician') {
+        // Technician path: ask for the specific craft first
+        updateUserState(userId, { profession: profession, step: 'collect_trade' });
+        await sendTradeList(sock, userId, t, userState);
+      } else {
+        updateUserState(userId, { profession: profession, step: 'collect_name' });
+        await sendMsg(`✅ ${t.prompts.thank_you}\n${lang === 'ar' ? 'الآن نحتاج' : 'Now we need'}\n• ${t.prompts.name}\n• ${t.prompts.phone}\n📝 ${lang === 'ar' ? 'ابدأ بـ' : 'Start with'} **${t.prompts.name}**...\n\n${backOption}`);
+      }
     } else {
       const professionOptions = lang === 'ar' ? '(مهندس، تقني، أم عامل)' : '(Engineer, Technician, or Worker)';
       await sendMsg('❌ ' + t.prompts.invalid_profession + ' ' + professionOptions + '...\n\n' + backOption);
     }
+    return;
+  }
+
+  // Trade selection (Technician path) - ask for the specific craft
+  if (userState.step === 'collect_trade') {
+    const lowerText = text.toLowerCase();
+    const tradeMap = {
+      '1': 'سباك',
+      '2': 'نجار',
+      '3': 'جبسنبورد',
+      '4': 'لياسة مبانى',
+      '5': 'بلاط ورخام'
+    };
+
+    if (tradeMap[text]) {
+      updateUserState(userId, { trade: tradeMap[text], step: 'collect_name' });
+      await sendMsg(`✅ ${lang === 'ar' ? 'تم تسجيل حرفتك' : 'Craft recorded'}: **${tradeMap[text]}**\n\n${lang === 'ar' ? 'الآن نحتاج' : 'Now we need'}\n• ${t.prompts.name}\n• ${t.prompts.phone}\n📝 ${lang === 'ar' ? 'ابدأ بـ' : 'Start with'} **${t.prompts.name}**...\n\n${backOption}`);
+    } else if (text === '6' || lowerText.includes('اخرى') || lowerText.includes('أخرى') || lowerText.includes('other') || lowerText.includes('غير ذلك')) {
+      // "Other" - let them type their craft
+      updateUserState(userId, { step: 'collect_trade_free' });
+      await sendMsg(`${lang === 'ar' ? '📝 اكتب حرفتك بالتفصيل (مثال: كهربائي، دهان، مبلط...)' : '📝 Type your craft (e.g., Electrician, Painter, Tiler...)'}:\n\n${backOption}`);
+    } else if (lowerText.includes('سباك') || lowerText.includes('plumber')) {
+      updateUserState(userId, { trade: 'سباك', step: 'collect_name' });
+      await sendMsg(`✅ ${lang === 'ar' ? 'تم تسجيل حرفتك' : 'Craft recorded'}: **سباك / Plumber**\n\n${lang === 'ar' ? 'الآن نحتاج' : 'Now we need'}\n• ${t.prompts.name}\n• ${t.prompts.phone}\n📝 ${lang === 'ar' ? 'ابدأ بـ' : 'Start with'} **${t.prompts.name}**...\n\n${backOption}`);
+    } else if (lowerText.includes('نجار') || lowerText.includes('carpenter')) {
+      updateUserState(userId, { trade: 'نجار', step: 'collect_name' });
+      await sendMsg(`✅ ${lang === 'ar' ? 'تم تسجيل حرفتك' : 'Craft recorded'}: **نجار / Carpenter**\n\n${lang === 'ar' ? 'الآن نحتاج' : 'Now we need'}\n• ${t.prompts.name}\n• ${t.prompts.phone}\n📝 ${lang === 'ar' ? 'ابدأ بـ' : 'Start with'} **${t.prompts.name}**...\n\n${backOption}`);
+    } else if (lowerText.includes('جبسنبورد') || lowerText.includes('جبس') || lowerText.includes('gypsum')) {
+      updateUserState(userId, { trade: 'جبسنبورد', step: 'collect_name' });
+      await sendMsg(`✅ ${lang === 'ar' ? 'تم تسجيل حرفتك' : 'Craft recorded'}: **جبسنبورد / Gypsum**\n\n${lang === 'ar' ? 'الآن نحتاج' : 'Now we need'}\n• ${t.prompts.name}\n• ${t.prompts.phone}\n📝 ${lang === 'ar' ? 'ابدأ بـ' : 'Start with'} **${t.prompts.name}**...\n\n${backOption}`);
+    } else if (lowerText.includes('لياسة') || lowerText.includes('لياسه') || lowerText.includes('plaster')) {
+      updateUserState(userId, { trade: 'لياسة مبانى', step: 'collect_name' });
+      await sendMsg(`✅ ${lang === 'ar' ? 'تم تسجيل حرفتك' : 'Craft recorded'}: **لياسة مبانى / Plastering**\n\n${lang === 'ar' ? 'الآن نحتاج' : 'Now we need'}\n• ${t.prompts.name}\n• ${t.prompts.phone}\n📝 ${lang === 'ar' ? 'ابدأ بـ' : 'Start with'} **${t.prompts.name}**...\n\n${backOption}`);
+    } else if (lowerText.includes('بلاط') || lowerText.includes('رخام') || lowerText.includes('marble') || lowerText.includes('tiles')) {
+      updateUserState(userId, { trade: 'بلاط ورخام', step: 'collect_name' });
+      await sendMsg(`✅ ${lang === 'ar' ? 'تم تسجيل حرفتك' : 'Craft recorded'}: **بلاط ورخام / Tiles & Marble**\n\n${lang === 'ar' ? 'الآن نحتاج' : 'Now we need'}\n• ${t.prompts.name}\n• ${t.prompts.phone}\n📝 ${lang === 'ar' ? 'ابدأ بـ' : 'Start with'} **${t.prompts.name}**...\n\n${backOption}`);
+    } else {
+      await sendMsg(`${lang === 'ar' ? '❌ اختر رقم الحرفة أو اكتب حرفتك مباشرة' : '❌ Choose a craft number or type your craft'}: (1-6)\n\n${backOption}`);
+    }
+    return;
+  }
+
+  // Free-text craft (Technician "Other" path)
+  if (userState.step === 'collect_trade_free') {
+    if (text.length < 2) {
+      await sendMsg(`${lang === 'ar' ? '❌ يرجى كتابة حرفتك بالتفصيل' : '❌ Please type your craft'}\n\n${backOption}`);
+      return;
+    }
+    updateUserState(userId, { trade: text, step: 'collect_name' });
+    await sendMsg(`✅ ${lang === 'ar' ? 'تم تسجيل حرفتك' : 'Craft recorded'}: **${text}**\n\n${lang === 'ar' ? 'الآن نحتاج' : 'Now we need'}\n• ${t.prompts.name}\n• ${t.prompts.phone}\n📝 ${lang === 'ar' ? 'ابدأ بـ' : 'Start with'} **${t.prompts.name}**...\n\n${backOption}`);
     return;
   }
   
@@ -1313,7 +1389,7 @@ async function handleMessageInner(sock, m) {
         const summary = t.summary
           .replace('{name}', userState.name)
           .replace('{phone}', userState.phone)
-          .replace('{details}', userState.profession);
+          .replace('{details}', (SHEET_PROFESSION_LABELS[userState.profession] || userState.profession || '') + (userState.trade ? ' - ' + userState.trade : ''));
         const thankYou = lang === 'ar'
           ? `🙏 ${t.prompts.thank_you}\n\n${backOption}`
           : `${t.prompts.thank_you}\n\n${backOption}`;
