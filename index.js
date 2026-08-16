@@ -1350,6 +1350,16 @@ let lastDisconnectInfo = null;
 let mongoClient = null;
 let authCollection = null;
 
+// In-memory log ring buffer for remote diagnostics (Render free = no log access)
+const logBuffer = [];
+const LOG_BUFFER_MAX = 300;
+function log(...args) {
+  const line = '[' + new Date().toISOString() + '] ' + args.join(' ');
+  console.log(line);
+  logBuffer.push(line);
+  if (logBuffer.length > LOG_BUFFER_MAX) logBuffer.shift();
+}
+
 // MongoDB-backed auth state (mirrors useMultiFileAuthState but persistent across restarts)
 async function useMongoAuthState(collection) {
   const writeData = async (id, data) => {
@@ -1581,25 +1591,27 @@ async function connectToWhatsApp() {
     activeSock = sock;
 
     sock.ev.on('connection.update', async (update) => {
-      const { connection, lastDisconnect, qr } = update;
+      const { connection, lastDisconnect, qr, isNewLogin } = update;
+      log('📡 connection.update:', JSON.stringify({ connection, isNewLogin: isNewLogin ?? false, hasQr: !!qr }));
 
       if (qr) {
+        log('🆕 New QR received from WhatsApp server');
         try {
           QRCode.toDataURL(qr, { width: 256, margin: 2, color: { dark: '#000', light: '#fff' } })
             .then(qrImageDataUrl => {
               currentQrData = qrImageDataUrl;
               qrGeneratedAt = Date.now();
-              console.log('\n📱 Open QR scanner at: ' + (process.env.RENDER_EXTERNAL_URL || 'http://localhost:' + (process.env.PORT || 3000)) + '/qr\n');
+              log('📱 QR ready at ' + (process.env.RENDER_EXTERNAL_URL || 'http://localhost:' + (process.env.PORT || 3000)) + '/qr');
             })
-            .catch(e => console.log('\n❌ QR generation error:', e.message));
+            .catch(e => log('❌ QR generation error:', e.message));
         } catch (e) {
-          console.log('\n❌ QR generation error:', e.message);
+          log('❌ QR generation error:', e.message);
         }
       }
 
       if (connection === 'open') {
-        console.log('\n✅ Connected to WhatsApp with browser: ' + browser[0]);
-        console.log('🤖 Bot ready (7 languages + anti-ban protection)...\n');
+        log('✅ Connected to WhatsApp with browser: ' + browser[0]);
+        log('🤖 Bot ready (7 languages + anti-ban protection)...');
         currentQrData = null;
         qrGeneratedAt = null;
       }
@@ -1609,7 +1621,8 @@ async function connectToWhatsApp() {
         if (activeSock === sock) activeSock = null;
 
         const statusCode = lastDisconnect?.error?.output?.statusCode;
-        console.log('\n❌ Disconnected (code: ' + statusCode + '):', lastDisconnect?.error?.message);
+        log('❌ Disconnected (code: ' + statusCode + '):', lastDisconnect?.error?.message);
+        log('   error stack:', lastDisconnect?.error?.stack || 'n/a');
         lastDisconnectInfo = { code: statusCode, message: lastDisconnect?.error?.message, at: new Date().toISOString() };
 
         // The QR displayed on /qr is now DEAD - clear it so clients never scan a stale code
@@ -1626,29 +1639,30 @@ async function connectToWhatsApp() {
         ];
 
         if (codesRequiringReset.includes(statusCode)) {
-          console.log('🗑️  Clearing session for code ' + statusCode + '...');
+          log('🗑️  Clearing session for code ' + statusCode + '...');
           try {
             if (process.env.MONGODB_URI) {
               await clearState();
-              console.log('✅ MongoDB session cleared');
+              log('✅ MongoDB session cleared');
             } else {
               rmSync(join(__dirname, 'auth_info'), { recursive: true, force: true });
-              console.log('✅ auth_info cleared');
+              log('✅ auth_info cleared');
             }
           } catch (cleanupErr) {
-            console.log('⚠️ Cleanup error:', cleanupErr.message);
+            log('⚠️ Cleanup error:', cleanupErr.message);
           }
           scheduleReconnect(15000);
         } else {
           // Transient errors - keep session and reconnect
-          console.log('🔄 Reconnecting in 8s (keeping session)...\n');
+          log('🔄 Reconnecting in 8s (keeping session)...');
           scheduleReconnect(8000);
         }
       }
     });
 
     sock.ev.on('creds.update', () => {
-      saveCreds().catch(e => console.log('⚠️ Failed to save creds:', e.message));
+      log('🔑 creds.update fired (phone may have scanned QR)');
+      saveCreds().catch(e => log('⚠️ Failed to save creds:', e.message));
     });
 
     sock.ev.on('messages.upsert', async ({ messages, type }) => {
@@ -1767,6 +1781,9 @@ function startServer() {
         last_disconnect: lastDisconnectInfo,
         uptime_seconds: Math.round(process.uptime())
       }));
+    } else if (req.url === '/logs') {
+      res.writeHead(200, { 'Content-Type': 'text/plain' });
+      res.end(logBuffer.join('\n'));
     } else {
       res.writeHead(404, { 'Content-Type': 'text/plain' });
       res.end('Not Found');
