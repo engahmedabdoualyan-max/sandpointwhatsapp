@@ -1472,6 +1472,11 @@ function getRandomBrowser() {
 let activeSock = null;
 let connectingNow = false;
 let isLoggedIn = false;
+// Incremented for every new socket we create. Each socket's close handler
+// captures its own epoch, so a close from an OLD/killed socket (whose 'close'
+// event fires synchronously inside stopSock -> sock.end()) is detected as stale
+// and never schedules another reconnect.
+let connectionEpoch = 0;
 
 // Keep the SAME browser identity across reconnects - changing it every time
 // (Safari -> Chrome -> Opera...) looks like a hijacked session to WhatsApp
@@ -1481,8 +1486,11 @@ const BROWSER = getRandomBrowser();
 function isSockAlive(sock) {
   try {
     if (!sock) return false;
-    // WebSocket OPEN state = 1
-    return sock.ws?.readyState === 1;
+    // baileys 6.7.24 exposes the WebSocketClient as sock.ws - it has an `isOpen`
+    // getter, NOT a raw `readyState` property. Checking `readyState === 1` always
+    // returned false, which silently disabled every "don't kill the live socket"
+    // guard and caused the 8s suicide reconnect loop.
+    return sock.ws?.isOpen === true;
   } catch (e) {
     return false;
   }
@@ -1568,14 +1576,18 @@ async function resetSessionAndReconnect() {
   }
   mongoClient = null;
   authCollection = null;
-  stopSock(activeSock);
+  // Detach BEFORE killing - stopSock sync-emits 'close' and the handler must
+  // see a stale socket so it doesn't schedule a competing reconnect.
+  const oldSock = activeSock;
   activeSock = null;
+  if (oldSock) stopSock(oldSock);
   setTimeout(() => connectToWhatsApp(), 3000);
 }
 
 async function reconnectNow() {
-  stopSock(activeSock);
+  const oldSock = activeSock;
   activeSock = null;
+  if (oldSock) stopSock(oldSock);
   await connectToWhatsApp();
 }
 
@@ -1591,10 +1603,18 @@ async function connectToWhatsApp() {
     return;
   }
   connectingNow = true;
+  // Capture our own epoch BEFORE killing the old socket - the old socket's
+  // 'close' event fires synchronously inside stopSock (baileys sock.end()), so
+  // it will compare against this new epoch and be ignored as stale.
+  const myEpoch = ++connectionEpoch;
 
-  // Only one connection at a time - kill any existing socket first
-  stopSock(activeSock);
+  // Only one connection at a time - detach the old socket BEFORE killing it.
+  // stopSock -> sock.end() emits 'connection.update close' SYNCHRONOUSLY, so if
+  // activeSock still pointed at the old socket the close handler would treat it
+  // as a legit disconnect and schedule another reconnect (the 8s suicide loop).
+  const old = activeSock;
   activeSock = null;
+  if (old) stopSock(old);
 
   try {
     log('\n🔄 Starting WhatsApp connection (QR mode)...');
@@ -1647,6 +1667,11 @@ async function connectToWhatsApp() {
       }
 
       if (connection === 'open') {
+        // Ignore 'open' from a stale socket - only the current one may flip state
+        if (myEpoch !== connectionEpoch || activeSock !== sock) {
+          log('⏭️ Open from stale socket - ignored');
+          return;
+        }
         connectingNow = false;
         isLoggedIn = true;
         log('✅ Connected to WhatsApp with browser: ' + BROWSER[0]);
@@ -1656,18 +1681,20 @@ async function connectToWhatsApp() {
       }
 
       if (connection === 'close') {
-        connectingNow = false;
-
         const statusCode = lastDisconnect?.error?.output?.statusCode;
 
-        // CRITICAL: if this closing socket is NOT the current active one, it means
-        // WE killed it on purpose (stopSock during a reconnect). Its close event
-        // must NOT schedule another reconnect - that caused the 8s suicide loop.
-        if (activeSock !== sock) {
+        // CRITICAL: if this closing socket is NOT the current one (old epoch, or
+        // activeSock already replaced), it means WE killed it on purpose
+        // (stopSock during a reconnect). Its close event must NOT schedule
+        // another reconnect - that caused the 8s suicide loop. The epoch check
+        // catches the synchronous close fired inside sock.end() before the
+        // caller had a chance to null activeSock.
+        if (myEpoch !== connectionEpoch || activeSock !== sock) {
           log('⏭️ Close from stale socket (killed by us) - ignored, no reconnect scheduled');
           return;
         }
 
+        connectingNow = false;
         // This socket is dead - clear it BEFORE reconnecting
         activeSock = null;
 
@@ -1869,8 +1896,9 @@ function startServer() {
       }
       mongoClient = null;
       authCollection = null;
-      stopSock(activeSock);
+      const oldSock = activeSock;
       activeSock = null;
+      if (oldSock) stopSock(oldSock);
       setTimeout(() => connectToWhatsApp(), 2000);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true, message: 'Session reset, reconnecting...' }));
