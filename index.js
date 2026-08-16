@@ -1470,6 +1470,13 @@ function getRandomBrowser() {
 
 // Track only ONE active socket - prevents duplicate/conflicting connections
 let activeSock = null;
+let connectingNow = false;
+let isLoggedIn = false;
+
+// Keep the SAME browser identity across reconnects - changing it every time
+// (Safari -> Chrome -> Opera...) looks like a hijacked session to WhatsApp
+// and triggers repeated "Stream Errored (515)" resets
+const BROWSER = getRandomBrowser();
 
 function isSockAlive(sock) {
   try {
@@ -1489,6 +1496,16 @@ function stopSock(sock) {
     sock.ws?.close?.();
   } catch (e) {}
 }
+
+// Watchdog: if we're logged in but the socket died silently (no 'close' event
+// was processed - e.g. stopSock from a parallel connect removed listeners),
+// force a reconnect. Runs every 20s.
+setInterval(() => {
+  if (isLoggedIn && !connectingNow && !isSockAlive(activeSock)) {
+    log('🐕 Watchdog: socket dead while logged in - forcing reconnect');
+    connectToWhatsApp().catch(e => log('💥 Watchdog reconnect error:', e.message));
+  }
+}, 20000);
 
 // Send message with retry - if the socket died, force a reconnect then retry
 async function sendWithRetry(sock, jid, messageContent, retries = 2) {
@@ -1561,19 +1578,23 @@ async function reconnectNow() {
 }
 
 async function connectToWhatsApp() {
+  if (connectingNow) {
+    log('⏭️ connectToWhatsApp skipped - another connection is already in progress');
+    return;
+  }
+  connectingNow = true;
+
   // Only one connection at a time - kill any existing socket first
   stopSock(activeSock);
   activeSock = null;
 
   try {
-    console.log('\n🔄 Starting WhatsApp connection (QR mode)...');
+    log('\n🔄 Starting WhatsApp connection (QR mode)...');
 
     const { state, saveCreds, clearState } = await getAuthState();
 
     const { version, isLatest } = await fetchLatestBaileysVersion();
-    console.log("Baileys version: " + version.join(".") + " - Latest: " + isLatest);
-
-    const browser = getRandomBrowser();
+    log("Baileys version: " + version.join(".") + " - Latest: " + isLatest);
 
     const sock = makeWASocket({
       version,
@@ -1585,7 +1606,8 @@ async function connectToWhatsApp() {
       // Keep it off until the connection is fully established.
       markOnlineOnConnect: false,
       printQRInTerminal: false,
-      browser: ['SAND POINT Bot', browser[0], browser[1]],
+      // SAME browser identity on every reconnect (see BROWSER const above)
+      browser: ['SAND POINT Bot', BROWSER[0], BROWSER[1]],
       defaultQueryTimeoutMs: 60000,
       connectTimeoutMs: 60000,
       qrTimeout: 60000
@@ -1617,7 +1639,8 @@ async function connectToWhatsApp() {
       }
 
       if (connection === 'open') {
-        log('✅ Connected to WhatsApp with browser: ' + browser[0]);
+        isLoggedIn = true;
+        log('✅ Connected to WhatsApp with browser: ' + BROWSER[0]);
         log('🤖 Bot ready (7 languages + anti-ban protection)...');
         currentQrData = null;
         qrGeneratedAt = null;
@@ -1649,9 +1672,12 @@ async function connectToWhatsApp() {
         const isRestartRequired = statusCode === DisconnectReason.restartRequired;
 
         if (isRestartRequired) {
+          // Session stays saved - a quick reconnect with the SAME creds is all that's needed.
+          // If the creds were wiped we'd loop scan->515->wipe forever.
           log('🔁 Stream errored (515) - reconnecting NOW with the SAME session');
           scheduleReconnect(2000);
         } else if (codesRequiringReset.includes(statusCode)) {
+          isLoggedIn = false;
           log('🗑️  Clearing session for code ' + statusCode + '...');
           try {
             if (process.env.MONGODB_URI) {
@@ -1707,9 +1733,11 @@ async function connectToWhatsApp() {
 
     return sock;
   } catch (err) {
-    console.error('\n💥 Connection error:', err.message);
-    console.log('🔄 Retrying in 10 seconds...\n');
-    setTimeout(connectToWhatsApp, 10000);
+    log('💥 Connection error:', err.message);
+    log('🔄 Retrying in 10 seconds...');
+    setTimeout(() => connectToWhatsApp(), 10000);
+  } finally {
+    connectingNow = false;
   }
 }
 
