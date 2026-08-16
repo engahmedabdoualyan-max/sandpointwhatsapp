@@ -96,6 +96,57 @@ function updateUserState(userId, updates) {
   saveUsers();
 }
 
+const SHEET_WEBHOOK_URL = process.env.GOOGLE_SHEET_WEBHOOK_URL;
+
+const SHEET_CATEGORY_LABELS = {
+  '1': 'عميل جديد / New Client',
+  '2': 'شركة / Company',
+  '3': 'باحث عن عمل / Job Seeker'
+};
+
+const SHEET_PROFESSION_LABELS = {
+  engineer: 'مهندس / Engineer',
+  technician: 'تقني / Technician',
+  worker: 'عامل / Worker'
+};
+
+const SHEET_LANGUAGE_LABELS = {
+  ar: 'العربية', en: 'English', ur: 'اردو', ne: 'नेपाली', bn: 'বাংলা', hi: 'हिन्दी', tl: 'Filipino'
+};
+
+async function saveRegistrationToSheet(userId, userState) {
+  if (!SHEET_WEBHOOK_URL) {
+    console.log('⚠️ GOOGLE_SHEET_WEBHOOK_URL not set - skipping sheet save');
+    return;
+  }
+  const payload = {
+    timestamp: new Date().toLocaleString(),
+    wa_number: userId,
+    language: SHEET_LANGUAGE_LABELS[userState.language] || userState.language || '',
+    category: SHEET_CATEGORY_LABELS[userState.category] || userState.category || '',
+    profession: SHEET_PROFESSION_LABELS[userState.profession] || userState.profession || '',
+    name: userState.name || '',
+    phone: userState.phone || '',
+    details: userState.details || userState.specialty || '',
+    files_count: (userState.files || []).length
+  };
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    const res = await fetch(SHEET_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+    const result = await res.text();
+    console.log(`📊 Google Sheet save: HTTP ${res.status} - ${result.slice(0, 200)}`);
+  } catch (err) {
+    console.log('⚠️ Google Sheet save failed:', err.message);
+  }
+}
+
 function resetUserState(userId) {
   usersData[userId] = {
     step: 'language',
@@ -1214,6 +1265,7 @@ async function handleMessageInner(sock, m) {
     if (userState.category === '1') {
       if (text === 'تم' || text.toLowerCase() === 'done' || text.toLowerCase() === 'finish') {
         updateUserState(userId, { step: 'complete' });
+        saveRegistrationToSheet(userId, userState);
         const summary = t.summary
           .replace('{name}', userState.name)
           .replace('{phone}', userState.phone)
@@ -1240,6 +1292,7 @@ async function handleMessageInner(sock, m) {
     } else if (userState.category === '2') {
       if (text === 'تم' || text.toLowerCase() === 'done' || text.toLowerCase() === 'finish') {
         updateUserState(userId, { step: 'complete' });
+        saveRegistrationToSheet(userId, userState);
         const summary = t.summary
           .replace('{name}', userState.name)
           .replace('{phone}', userState.phone)
@@ -1256,6 +1309,7 @@ async function handleMessageInner(sock, m) {
     } else if (userState.category === '3') {
       if (text === 'تم' || text.toLowerCase() === 'done' || text.toLowerCase() === 'finish') {
         updateUserState(userId, { step: 'complete' });
+        saveRegistrationToSheet(userId, userState);
         const summary = t.summary
           .replace('{name}', userState.name)
           .replace('{phone}', userState.phone)

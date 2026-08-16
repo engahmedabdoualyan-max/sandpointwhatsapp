@@ -11,5 +11,7 @@ services:
         value: +966543120557
       - key: MONGODB_URI
         sync: false
+      - key: GOOGLE_SHEET_WEBHOOK_URL
+        sync: false
     plan: free
     autoDeploy: true
