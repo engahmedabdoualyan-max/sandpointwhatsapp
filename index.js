@@ -1491,21 +1491,23 @@ function isSockAlive(sock) {
 function stopSock(sock) {
   if (!sock) return;
   try {
-    sock.ev?.removeAllListeners?.();
+    // IMPORTANT: do NOT removeAllListeners here - it hides the 'close' event
+    // and the reconnect logic never learns the socket died (seen in logs:
+    // connections stacked 3x in one second, no close logged, 515 loops)
     sock.end?.();
     sock.ws?.close?.();
   } catch (e) {}
 }
 
 // Watchdog: if we're logged in but the socket died silently (no 'close' event
-// was processed - e.g. stopSock from a parallel connect removed listeners),
-// force a reconnect. Runs every 20s.
+// was processed), force a reconnect. Runs every 30s - long enough that it never
+// races with scheduleReconnect (2s/8s/15s) but short enough to revive a dead bot.
 setInterval(() => {
   if (isLoggedIn && !connectingNow && !isSockAlive(activeSock)) {
     log('🐕 Watchdog: socket dead while logged in - forcing reconnect');
     connectToWhatsApp().catch(e => log('💥 Watchdog reconnect error:', e.message));
   }
-}, 20000);
+}, 30000);
 
 // Send message with retry - if the socket died, force a reconnect then retry
 async function sendWithRetry(sock, jid, messageContent, retries = 2) {
@@ -1639,6 +1641,7 @@ async function connectToWhatsApp() {
       }
 
       if (connection === 'open') {
+        connectingNow = false;
         isLoggedIn = true;
         log('✅ Connected to WhatsApp with browser: ' + BROWSER[0]);
         log('🤖 Bot ready (7 languages + anti-ban protection)...');
@@ -1647,6 +1650,7 @@ async function connectToWhatsApp() {
       }
 
       if (connection === 'close') {
+        connectingNow = false;
         // This socket is dead - clear it BEFORE reconnecting
         if (activeSock === sock) activeSock = null;
 
@@ -1737,7 +1741,9 @@ async function connectToWhatsApp() {
     log('🔄 Retrying in 10 seconds...');
     setTimeout(() => connectToWhatsApp(), 10000);
   } finally {
-    connectingNow = false;
+    // Note: connectingNow is NOT reset here - it stays true until the socket
+    // actually opens or closes (handled in connection.update below). Resetting
+    // early allowed 2-3 parallel connections to stack up (seen in logs).
   }
 }
 
