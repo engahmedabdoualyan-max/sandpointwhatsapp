@@ -1503,7 +1503,7 @@ function stopSock(sock) {
 // was processed), force a reconnect. Runs every 30s - long enough that it never
 // races with scheduleReconnect (2s/8s/15s) but short enough to revive a dead bot.
 setInterval(() => {
-  if (isLoggedIn && !connectingNow && !isSockAlive(activeSock)) {
+  if (isLoggedIn && !connectingNow && reconnectTimer === null && !isSockAlive(activeSock)) {
     log('🐕 Watchdog: socket dead while logged in - forcing reconnect');
     connectToWhatsApp().catch(e => log('💥 Watchdog reconnect error:', e.message));
   }
@@ -1584,6 +1584,12 @@ async function connectToWhatsApp() {
     log('⏭️ connectToWhatsApp skipped - another connection is already in progress');
     return;
   }
+  // If we already have a LIVE socket, nothing to do - the caller's timer was stale.
+  // Killing a healthy socket here caused the 8s suicide loop (open -> killed -> open...)
+  if (isSockAlive(activeSock)) {
+    log('⏭️ connectToWhatsApp skipped - socket already alive');
+    return;
+  }
   connectingNow = true;
 
   // Only one connection at a time - kill any existing socket first
@@ -1651,10 +1657,20 @@ async function connectToWhatsApp() {
 
       if (connection === 'close') {
         connectingNow = false;
-        // This socket is dead - clear it BEFORE reconnecting
-        if (activeSock === sock) activeSock = null;
 
         const statusCode = lastDisconnect?.error?.output?.statusCode;
+
+        // CRITICAL: if this closing socket is NOT the current active one, it means
+        // WE killed it on purpose (stopSock during a reconnect). Its close event
+        // must NOT schedule another reconnect - that caused the 8s suicide loop.
+        if (activeSock !== sock) {
+          log('⏭️ Close from stale socket (killed by us) - ignored, no reconnect scheduled');
+          return;
+        }
+
+        // This socket is dead - clear it BEFORE reconnecting
+        activeSock = null;
+
         log('❌ Disconnected (code: ' + statusCode + '):', lastDisconnect?.error?.message);
         log('   error stack:', lastDisconnect?.error?.stack || 'n/a');
         lastDisconnectInfo = { code: statusCode, message: lastDisconnect?.error?.message, at: new Date().toISOString() };
@@ -1739,11 +1755,12 @@ async function connectToWhatsApp() {
   } catch (err) {
     log('💥 Connection error:', err.message);
     log('🔄 Retrying in 10 seconds...');
+    connectingNow = false; // must reset here - no socket was created to fire open/close
     setTimeout(() => connectToWhatsApp(), 10000);
   } finally {
-    // Note: connectingNow is NOT reset here - it stays true until the socket
-    // actually opens or closes (handled in connection.update below). Resetting
-    // early allowed 2-3 parallel connections to stack up (seen in logs).
+    // Note: connectingNow is NOT reset here on success - it stays true until the
+    // socket actually opens or closes (handled in connection.update below).
+    // Resetting early allowed 2-3 parallel connections to stack up (seen in logs).
   }
 }
 
