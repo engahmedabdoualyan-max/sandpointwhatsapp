@@ -1597,7 +1597,7 @@ async function connectToWhatsApp() {
       if (qr) {
         log('🆕 New QR received from WhatsApp server');
         try {
-          QRCode.toDataURL(qr, { width: 256, margin: 2, color: { dark: '#000', light: '#fff' } })
+          QRCode.toDataURL(qr, { width: 350, margin: 4, errorCorrectionLevel: 'H', color: { dark: '#000', light: '#fff' } })
             .then(qrImageDataUrl => {
               currentQrData = qrImageDataUrl;
               qrGeneratedAt = Date.now();
@@ -1642,8 +1642,11 @@ async function connectToWhatsApp() {
           log('🗑️  Clearing session for code ' + statusCode + '...');
           try {
             if (process.env.MONGODB_URI) {
-              await clearState();
-              log('✅ MongoDB session cleared');
+              // loggedOut (401) means the saved creds are REJECTED by WhatsApp -
+              // we must wipe creds too, otherwise every reconnect fails with 401 again
+              // and no fresh QR is ever generated (infinite loop without QR)
+              await authCollection.deleteMany({});
+              log('✅ MongoDB session fully cleared (including creds)');
             } else {
               rmSync(join(__dirname, 'auth_info'), { recursive: true, force: true });
               log('✅ auth_info cleared');
@@ -1651,6 +1654,8 @@ async function connectToWhatsApp() {
           } catch (cleanupErr) {
             log('⚠️ Cleanup error:', cleanupErr.message);
           }
+          mongoClient = null;
+          authCollection = null;
           scheduleReconnect(15000);
         } else {
           // Transient errors - keep session and reconnect
@@ -1705,31 +1710,31 @@ function startServer() {
       res.end(`<!DOCTYPE html>
 <html>
 <head><title>SAND POINT GLOBAL - WhatsApp QR Code</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <meta http-equiv="refresh" content="10">
 <style>
-  body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background: #f5f5f5; }
-  .container { max-width: 500px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-  h1 { color: #25D36E; font-size: 24px; margin-bottom: 20px; }
-  .qr-code { margin: 20px auto; display: flex; justify-content: center; }
-  .instructions { margin-top: 20px; color: #555; font-size: 16px; line-height: 1.6; }
-  .scan-icon { font-size: 24px; }
-  .warning { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px; margin: 15px 0; font-size: 14px; color: #856404; }
-  .updated { color: #999; font-size: 12px; margin-top: 15px; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; text-align: center; background: #f5f5f5; }
+  .container { max-width: 520px; margin: 0 auto; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+  h1 { color: #25D36E; font-size: 22px; margin-bottom: 10px; }
+  .qr-wrap { margin: 10px auto; display: flex; justify-content: center; align-items: center; }
+  .qr-wrap img { width: 280px; height: 280px; max-width: 90vw; max-height: 90vw; object-fit: contain; display: block; }
+  .instructions { margin-top: 10px; color: #555; font-size: 15px; line-height: 1.6; }
+  .warning { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 10px; margin: 12px 0; font-size: 13px; color: #856404; }
+  .updated { color: #999; font-size: 12px; margin-top: 10px; }
 </style>
 </head>
 <body>
   <div class="container">
     <h1>SAND POINT GLOBAL 🏗️</h1>
-    <div class="qr-code">
-      <img src="${currentQrData}" alt="WhatsApp QR Code" style="max-width:100%; height:auto;" />
+    <div class="qr-wrap">
+      <img src="${currentQrData}" alt="WhatsApp QR Code" />
     </div>
     <div class="instructions">
-      <div class="scan-icon">📱</div>
       <p><strong>Scan this QR code with WhatsApp</strong></p>
-      <p>1. Open WhatsApp on your phone</p>
-      <p>2. Go to Settings → WhatsApp Web/Desktop</p>
-      <p>3. Tap "Scan QR Code" and scan this code</p>
+      <p>1️⃣ Open WhatsApp on your phone</p>
+      <p>2️⃣ Settings → WhatsApp Web/Desktop</p>
+      <p>3️⃣ Tap "Scan QR Code" and scan this code</p>
     </div>
     <div class="warning">
       ⚠️ <strong>Important:</strong> Scan from a DIFFERENT phone.
@@ -1784,6 +1789,28 @@ function startServer() {
     } else if (req.url === '/logs') {
       res.writeHead(200, { 'Content-Type': 'text/plain' });
       res.end(logBuffer.join('\n'));
+    } else if (req.url === '/reset-session') {
+      (async () => {
+      log('🛠️  Manual /reset-session requested');
+      try {
+        if (process.env.MONGODB_URI && authCollection) {
+          await authCollection.deleteMany({});
+          log('✅ Mongo session wiped by /reset-session');
+        } else {
+          rmSync(join(__dirname, 'auth_info'), { recursive: true, force: true });
+          log('✅ auth_info wiped by /reset-session');
+        }
+      } catch (err) {
+        log('⚠️ /reset-session cleanup error:', err.message);
+      }
+      mongoClient = null;
+      authCollection = null;
+      stopSock(activeSock);
+      activeSock = null;
+      setTimeout(() => connectToWhatsApp(), 2000);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, message: 'Session reset, reconnecting...' }));
+      })();
     } else {
       res.writeHead(404, { 'Content-Type': 'text/plain' });
       res.end('Not Found');
