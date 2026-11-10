@@ -14,6 +14,7 @@ import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import http from 'http';
+import dns from 'dns';
 import QRCode from 'qrcode';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -1425,6 +1426,9 @@ let qrGeneratedAt = null;
 let lastDisconnectInfo = null;
 let mongoClient = null;
 let authCollection = null;
+let mongoConnected = false;
+let mongoLastError = null;
+let mongoMaskedUri = null;
 
 // In-memory log ring buffer for remote diagnostics (Render free = no log access)
 const logBuffer = [];
@@ -1497,9 +1501,45 @@ async function useMongoAuthState(collection) {
   };
 }
 
+// Mask password in a Mongo URI for safe logging
+function maskMongoUri(uri) {
+  if (!uri) return null;
+  try {
+    return uri.replace(/(mongodb(?:\+srv)?:\/\/[^:]+:)[^@]+(@)/, '$1****$2');
+  } catch (e) {
+    return '(unparseable)';
+  }
+}
+
+// Extract hostname from a Mongo URI
+function mongoHostFromUri(uri) {
+  if (!uri) return null;
+  try {
+    const m = uri.match(/@([^/?]+)/);
+    return m ? m[1] : null;
+  } catch (e) {
+    return null;
+  }
+}
+
 async function getAuthState() {
   const mongoUri = process.env.MONGODB_URI;
   if (mongoUri) {
+    mongoMaskedUri = maskMongoUri(mongoUri);
+    const host = mongoHostFromUri(mongoUri);
+    log('🗄️ Mongo URI (masked):', mongoMaskedUri);
+    log('🗄️ Mongo host:', host);
+    // DNS pre-check (helps diagnose ENOTFOUND / wrong cluster name)
+    if (host) {
+      try {
+        const srvName = '_mongodb._tcp.' + host;
+        const srv = await dns.promises.resolveSrv(srvName);
+        log('🗄️ DNS SRV OK:', JSON.stringify(srv));
+      } catch (e) {
+        log('❌ DNS SRV FAILED for', '_mongodb._tcp.' + host, '->', e.code || e.message);
+        mongoLastError = 'DNS SRV failed: ' + (e.code || e.message) + ' for ' + host;
+      }
+    }
     try {
       if (!mongoClient) {
         mongoClient = new MongoClient(mongoUri, {
@@ -1507,15 +1547,26 @@ async function getAuthState() {
           connectTimeoutMS: 20000
         });
         await mongoClient.connect();
-        console.log('🗄️ MongoDB session storage: connected');
+        await mongoClient.db().admin().ping();
+        mongoConnected = true;
+        mongoLastError = null;
+        log('✅ MongoDB session storage: connected & ping OK');
       }
       if (!authCollection) {
         authCollection = mongoClient.db().collection('wa_sessions');
       }
       return await useMongoAuthState(authCollection);
     } catch (err) {
-      console.error('❌ MongoDB connection failed, falling back to local storage:', err.message);
+      mongoConnected = false;
+      mongoLastError = err.message;
+      log('❌ MongoDB connection failed, falling back to local storage:', err.message);
+      // reset client so next attempt retries
+      try { await mongoClient?.close(); } catch (e) {}
+      mongoClient = null;
+      authCollection = null;
     }
+  } else {
+    log('⚠️ MONGODB_URI not set — using local file storage (ephemeral on Render)');
   }
   return await useMultiFileAuthState(join(__dirname, 'auth_info'));
 }
@@ -1829,7 +1880,7 @@ async function connectToWhatsApp() {
 
     sock.ev.on('creds.update', () => {
       log('🔑 creds.update fired (phone may have scanned QR)');
-      saveCreds().catch(e => log('⚠️ Failed to save creds:', e.message));
+      saveCreds().catch(e => log('⚠️ Failed to save creds:', e.message, '| mongo:', mongoMaskedUri || '(none)'));
     });
 
     sock.ev.on('messages.upsert', async ({ messages, type }) => {
@@ -1948,11 +1999,47 @@ function startServer() {
         socket_alive: !!activeSock && isSockAlive(activeSock),
         session_storage: process.env.MONGODB_URI ? 'mongo' : 'local-files',
         mongo_uri_set: !!process.env.MONGODB_URI,
+        mongo_connected: mongoConnected,
+        mongo_last_error: mongoLastError,
+        mongo_masked_uri: mongoMaskedUri,
         send_failures: consecutiveSendFailures,
         qr_age_seconds: currentQrData && qrGeneratedAt ? Math.floor((Date.now() - qrGeneratedAt) / 1000) : null,
         last_disconnect: lastDisconnectInfo,
         uptime_seconds: Math.round(process.uptime())
       }));
+    } else if (req.url === '/mongo-test') {
+      (async () => {
+        const uri = process.env.MONGODB_URI;
+        const result = { mongo_uri_set: !!uri, masked_uri: maskMongoUri(uri), host: mongoHostFromUri(uri) };
+        if (!uri) { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ ...result, ok: false, error: 'MONGODB_URI not set' })); return; }
+        const host = mongoHostFromUri(uri);
+        // DNS SRV
+        try {
+          const srv = await dns.promises.resolveSrv('_mongodb._tcp.' + host);
+          result.dns_srv = srv;
+        } catch (e) {
+          result.dns_srv_error = (e.code || e.message);
+        }
+        // connect + ping + count
+        let client = null;
+        try {
+          client = new MongoClient(uri, { serverSelectionTimeoutMS: 15000, connectTimeoutMS: 15000 });
+          await client.connect();
+          const ping = await client.db().admin().ping();
+          result.ping = ping;
+          const coll = client.db().collection('wa_sessions');
+          result.wa_sessions_count = await coll.countDocuments();
+          result.ok = true;
+        } catch (e) {
+          result.ok = false;
+          result.error = e.message;
+        } finally {
+          try { await client?.close(); } catch (e) {}
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(result, null, 2));
+      })();
+      return;
     } else if (req.url === '/logs') {
       res.writeHead(200, { 'Content-Type': 'text/plain' });
       res.end(logBuffer.join('\n'));
